@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Post, UseInterceptors } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Param,
+    Post,
+    UseInterceptors,
+    Query,
+} from '@nestjs/common';
 import {
     ApiExcludeEndpoint,
     ApiOkResponse,
@@ -26,7 +33,7 @@ export class QueueController {
 
     @Post('/clear')
     @ApiExcludeEndpoint()
-    async clear(@Param('key') key: string): Promise<{ cleared: boolean }> {
+    async clear(@Query('key') key: string): Promise<{ cleared: boolean }> {
         if (key !== 'SECRET_KEY') return;
 
         await this.queueService.clearQueue();

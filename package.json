@@ -37,7 +37,7 @@
     "bull": "^3.22.6",
     "cache-manager": "^3.4.3",
     "cache-manager-redis-store": "^2.0.0",
-    "connect-redis": "^6.0.0",
+    "connect-mongo": "^4.4.1",
     "express-session": "^1.17.2",
     "helmet": "^4.6.0",
     "mongoose": "^5.12.11",

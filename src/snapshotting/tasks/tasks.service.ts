@@ -44,8 +44,10 @@ export class TasksService {
 
         const items = await this.getAllItems();
 
+        this.logger.debug('Got ' + items.length + ' items!');
+
         items.forEach(async (sku) => {
-            await this.makerService.enqueue(sku, true);
+            await this.makerService.enqueue(sku, true).catch((err) => null);
         });
 
         this.logger.debug('Done getting items!');

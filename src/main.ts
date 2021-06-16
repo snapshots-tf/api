@@ -1,10 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import * as RedisStore from 'connect-redis';
 import * as helmet from 'helmet';
 import * as session from 'express-session';
-import Redis from 'ioredis';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -25,11 +23,13 @@ async function bootstrap() {
 
     app.use(
         session({
-            /*store: new RedisStore({
-                // TODO: Add config
-                client: new Redis(),
+            store: require('connect-mongo').create({
+                mongoUrl: 'mongodb://localhost',
+                mongoOptions: {
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true,
+                },
             }),
-            */
             secret: ['SESION_SECRET_1', 'SESSION_SECRET_2'],
             resave: false,
             saveUninitialized: false,
