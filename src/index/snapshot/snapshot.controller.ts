@@ -16,7 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { GetSnapshot } from 'src/common/api-responses';
 import QuerySnapshotDTO from 'src/common/dtos/QuerySnapshot.dto';
-import { MakerService } from 'src/maker/maker.service';
+import { MakerService } from 'src/snapshotting/maker/maker.service';
 import { SnapshotService } from './snapshot.service';
 
 @ApiTags('snapshot')

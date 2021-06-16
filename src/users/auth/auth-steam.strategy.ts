@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-steam';
 import { AuthService } from './auth.service';
-import { ApiUser } from '../schemas/api-user.schema';
+import { ApiUser } from '../../schemas/api-user.schema';
 
 @Injectable()
 export class SteamStrategy extends PassportStrategy(Strategy) {

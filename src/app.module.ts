@@ -6,20 +6,21 @@ import { ListingsModule } from './index/listings/listings.module';
 
 import { BullModule } from '@nestjs/bull';
 
-import { MakerModule } from './maker/maker.module';
+import { MakerModule } from './snapshotting/maker/maker.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TasksModule } from './tasks/tasks.module';
-import { QueueModule } from './queue/queue.module';
+import { TasksModule } from './snapshotting/tasks/tasks.module';
+import { QueueModule } from './snapshotting/queue/queue.module';
 import { SnapshotModule } from './index/snapshot/snapshot.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './users/auth/auth.module';
 import { ListingModule } from './index/listing/listing.module';
 import { AppController } from './app.controller';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
 import { ListingSchema } from './schemas/listing.schema';
 import { SnapshotSchema } from './schemas/snapshot.schema';
-import { MakerService } from './maker/maker.service';
+import { MakerService } from './snapshotting/maker/maker.service';
+import { MeModule } from './users/me/me.module';
 
 @Module({
     imports: [
@@ -69,6 +70,7 @@ import { MakerService } from './maker/maker.service';
         BullModule.registerQueue({
             name: 'maker',
         }),
+        MeModule,
     ],
     providers: [
         {

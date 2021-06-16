@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { MakerService } from 'src/maker/maker.service';
+import { MakerService } from 'src/snapshotting/maker/maker.service';
 
 @Injectable()
 export class QueueService {
     constructor(private makerService: MakerService) {}
 
-    async getQueueStatus(): Promise<{ active: number; failed: number }> {
+    async getQueueStatus(): Promise<{ waiting: number; failed: number }> {
         return {
             failed: await this.makerService.getFailedCount(),
-            active: await this.makerService.getActiveCount(),
+            waiting: await this.makerService.getWaitingCount(),
         };
     }
 

@@ -16,7 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { GetSnapshotsOverview } from './common/api-responses';
 import { testSKU } from './lib/skus';
-import { MakerService } from './maker/maker.service';
+import { MakerService } from './snapshotting/maker/maker.service';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
 
 @ApiTags('index')
@@ -36,7 +36,7 @@ export class AppController {
     @ApiHeader({
         name: 'SNAPSHOT_KEY',
         description:
-            'This key is required for this endpoint to work, please get this from aethez#6403 on discord. This is to prevent abuse, you can still use all the other endpoints without a key.',
+            "This key is required for this endpoint to work, get it by first going to /auth/steam then /me/api-key. It's bound to the account you sign in with.",
     })
     async request(
         @Param('sku') sku: string

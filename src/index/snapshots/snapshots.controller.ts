@@ -1,7 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetSnapshotOverview } from 'src/common/api-responses';
-import { MakerService } from 'src/maker/maker.service';
 import { SnapshotsService } from './snapshots.service';
 
 @ApiTags('snapshots')

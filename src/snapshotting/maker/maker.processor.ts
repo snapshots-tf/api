@@ -2,7 +2,7 @@ import axios from 'axios';
 import { stringify, parseSKU } from 'tf2-item-format/static';
 import { requireStatic, SchemaEnum } from 'tf2-static-schema';
 
-import { OnQueueDrained, Process, Processor } from '@nestjs/bull';
+import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import {
     SearchListingResponse,
@@ -18,6 +18,7 @@ import { ListingDocument } from 'src/schemas/listing.schema';
 import { Job } from 'bull';
 import SPELLS from 'src/lib/spells';
 import PAINTS from 'src/lib/paints';
+import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
 
 @Processor('maker')
 export class MakerProcessor {
@@ -28,17 +29,13 @@ export class MakerProcessor {
     constructor(
         @InjectModel('snapshots')
         private snapshotsModel: Model<SnapshotDocument>,
-        @InjectModel('listings') private listingsModule: Model<ListingDocument>
+        @InjectModel('listings') private listingsModule: Model<ListingDocument>,
+        private snapshotsGateway: SnapshotsGateway
     ) {}
-
-    @OnQueueDrained()
-    onQueueDrained(): void {
-        this.logger.debug('Queue drained!');
-    }
 
     @Process('snapshot')
     async handleSnapshot(job: Job<{ sku: string }>): Promise<void> {
-        await this.generateSnapshot(job.data.sku);
+        await this.generateSnapshot(job.data.sku).catch(() => null);
     }
 
     private parseListing(listing: BuyListing | SellListing): {
@@ -84,10 +81,14 @@ export class MakerProcessor {
             .then(async (result: { data: SearchListingResponse }) => {
                 let listings: SnapshotNamespace.Listing[] = [];
 
+                let buyListings = 0;
+
                 ['buy', 'sell'].forEach((side) => {
                     listings = listings.concat(
                         result.data[side].listings.map(
                             (listing: BuyListing | SellListing) => {
+                                if (side === 'buy') buyListings++;
+
                                 const parsed = this.parseListing(listing);
                                 return {
                                     buying: side === 'buy',
@@ -147,6 +148,15 @@ export class MakerProcessor {
                     listings: ids,
                     savedAt: time,
                 }).save();
+
+                this.snapshotsGateway.emitMessage('snapshot', {
+                    listings: {
+                        buy: buyListings,
+                        sell: listings.length - buyListings,
+                    },
+                    sku,
+                    name: stringify(parseSKU(sku)),
+                });
 
                 return {
                     sku,

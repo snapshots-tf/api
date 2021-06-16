@@ -20,7 +20,7 @@ export class QueueController {
     @ApiOkResponse({
         type: GetQueueStatus,
     })
-    async queue(): Promise<{ active: number; failed: number }> {
+    async queue(): Promise<{ failed: number; waiting: number }> {
         return await this.queueService.getQueueStatus();
     }
 

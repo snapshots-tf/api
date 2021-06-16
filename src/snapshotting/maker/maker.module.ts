@@ -1,12 +1,12 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MakerProcessor } from './maker.processor';
 import { MakerService } from './maker.service';
 
-import { SnapshotSchema } from '../schemas/snapshot.schema';
-import { ListingSchema } from '../schemas/listing.schema';
+import { SnapshotSchema } from '../../schemas/snapshot.schema';
+import { ListingSchema } from '../../schemas/listing.schema';
+import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
 
 @Module({
     imports: [
@@ -23,6 +23,6 @@ import { ListingSchema } from '../schemas/listing.schema';
             },
         ]),
     ],
-    providers: [MakerProcessor, MakerService],
+    providers: [MakerProcessor, MakerService, SnapshotsGateway],
 })
 export class MakerModule {}

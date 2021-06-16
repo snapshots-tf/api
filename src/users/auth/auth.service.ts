@@ -11,7 +11,7 @@ export class AuthService {
     ) {}
 
     async setAndGetUser(steamID64: string): Promise<ApiUser> {
-        const existing = await this.apiUserModel.findOne({ steamID64 }).lean();
+        const existing = await this.apiUserModel.findOne({ steamID64 });
 
         if (!existing) {
             await new this.apiUserModel({
@@ -19,7 +19,7 @@ export class AuthService {
             }).save();
         }
 
-        return existing || { steamID64 };
+        return existing?.toJSON() || { steamID64 };
     }
 
     findByApiKey(key: string): Promise<boolean> {

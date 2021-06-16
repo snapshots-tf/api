@@ -4,7 +4,7 @@ import { SKUAttributes } from 'tf2-item-format';
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, Interval, Timeout } from '@nestjs/schedule';
-import { MakerService } from 'src/maker/maker.service';
+import { MakerService } from 'src/snapshotting/maker/maker.service';
 
 interface IGetPricesPrice {
     value: number;
@@ -36,15 +36,24 @@ export class TasksService {
 
     @Interval(28800 * 1000)
     async handleInterval() {
-        this.logger.debug('Get items');
+        const waiting = await this.makerService.getWaitingCount();
 
-        /*
+        this.logger.debug('Get items, waiting: ' + waiting);
+
+        if (waiting > 10) return;
+
         const items = await this.getAllItems();
 
         items.forEach(async (sku) => {
-            await this.makerService.enqueue(sku);
+            await this.makerService.enqueue(sku, true);
         });
-        */
+
+        this.logger.debug('Done getting items!');
+    }
+
+    @Timeout(1000)
+    handleTimeout(): void {
+        this.handleInterval().catch(() => null);
     }
 
     private async getAllItems(): Promise<string[]> {

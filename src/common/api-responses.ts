@@ -60,7 +60,7 @@ export class GetQueueStatus {
     active: number;
 
     @ApiProperty()
-    failed: number;
+    waiting: number;
 }
 
 export class GetListing {

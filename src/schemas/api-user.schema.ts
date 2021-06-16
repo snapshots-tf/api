@@ -5,14 +5,11 @@ export type ApiUserDocument = ApiUser & mongoose.Document;
 
 @Schema()
 export class ApiUser {
-    @Prop({ required: false })
-    id: string;
-
     @Prop({ required: true })
     steamID64: string;
 
     @Prop({ required: false })
-    key: string;
+    key?: string;
 }
 
 export const ApiUserSchema = SchemaFactory.createForClass(ApiUser);

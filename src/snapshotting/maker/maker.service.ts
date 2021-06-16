@@ -17,8 +17,8 @@ export class MakerService {
         return this.makerQueue.getFailedCount();
     }
 
-    async getActiveCount(): Promise<number> {
-        return this.makerQueue.getActiveCount();
+    async getWaitingCount(): Promise<number> {
+        return await this.makerQueue.getWaitingCount();
     }
 
     async getQueue(): Promise<Job<{ sku: string }>[]> {
@@ -39,16 +39,18 @@ export class MakerService {
         return this.makerQueue.empty();
     }
 
-    async enqueue(sku: string): Promise<number> {
-        const waiting = await this.makerQueue.getWaiting();
+    async enqueue(sku: string, skipHasCheck: boolean = false): Promise<number> {
+        if (!skipHasCheck) {
+            const waiting = await this.makerQueue.getWaiting();
 
-        let hasInQueue = 0;
+            let hasInQueue = 0;
 
-        for (let i = 0; i < waiting.length; i++) {
-            if (waiting[i].data.sku === sku) hasInQueue++;
+            for (let i = 0; i < waiting.length; i++) {
+                if (waiting[i].data.sku === sku) hasInQueue++;
+            }
+
+            if (hasInQueue >= 3) throw new Error('Too many in the queue!');
         }
-
-        if (hasInQueue >= 3) throw new Error('Too many in the queue!');
 
         return this.makerQueue
             .add(
@@ -63,7 +65,7 @@ export class MakerService {
             .then(async () => {
                 return (
                     Math.round(new Date().getTime() / 1000) +
-                    (await this.getActiveCount()) * 1000 +
+                    (await this.getWaitingCount()) * 1000 +
                     10 * 1000
                 );
             });
