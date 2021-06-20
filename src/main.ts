@@ -24,13 +24,13 @@ async function bootstrap() {
     app.use(
         session({
             store: require('connect-mongo').create({
-                mongoUrl: 'mongodb://localhost',
+                mongoUrl: 'mongodb://localhost/snapshots',
                 mongoOptions: {
                     useNewUrlParser: true,
                     useUnifiedTopology: true,
                 },
             }),
-            secret: ['SESION_SECRET_1', 'SESSION_SECRET_2'],
+            secret: ['Ic7n93JBY7vx', 'Tm33RN1WTTnM', 'u2Q8Q2jjJEPb'],
             resave: false,
             saveUninitialized: false,
         })
