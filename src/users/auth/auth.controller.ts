@@ -13,8 +13,6 @@ export class AuthController {
         // @ts-ignore
         req.session.user = req.user;
 
-        console.log('', req.user);
-
         return { url: '/me' };
     }
 }
