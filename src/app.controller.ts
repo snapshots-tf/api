@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    CacheTTL,
     Controller,
     Get,
     HttpStatus,
@@ -14,18 +15,35 @@ import {
     ApiOperation,
     ApiTags,
 } from '@nestjs/swagger';
-import { GetSnapshotsOverview } from './common/api-responses';
+import { GetSnapshotsOverview, GetStats } from './common/api-responses';
 import { testSKU } from './lib/skus';
 import { MakerService } from './snapshotting/maker/maker.service';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
+import { ListingsService } from './index/listings/listings.service';
 
 @ApiTags('index')
 @Controller('')
 export class AppController {
     constructor(
         private snapshotsService: SnapshotsService,
+        private listingsService: ListingsService,
         private makerService: MakerService
     ) {}
+
+    @Get('/stats')
+    @ApiOperation({
+        summary: 'Get API statistics. Cached for 900 seconds.',
+    })
+    @ApiOkResponse({
+        type: GetStats,
+    })
+    @CacheTTL(900)
+    async stats(): Promise<{ snapshots: number; listings: number }> {
+        return {
+            snapshots: await this.snapshotsService.getSnapshotsCount(),
+            listings: await this.listingsService.getListingsCount(),
+        };
+    }
 
     @Post('/request/:sku')
     @ApiOperation({

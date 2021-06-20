@@ -21,6 +21,7 @@ import { ListingSchema } from './schemas/listing.schema';
 import { SnapshotSchema } from './schemas/snapshot.schema';
 import { MakerService } from './snapshotting/maker/maker.service';
 import { MeModule } from './users/me/me.module';
+import { ListingsService } from './index/listings/listings.service';
 
 @Module({
     imports: [
@@ -79,6 +80,7 @@ import { MeModule } from './users/me/me.module';
         },
         SnapshotsService,
         MakerService,
+        ListingsService,
     ],
     controllers: [AppController],
 })

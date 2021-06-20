@@ -12,6 +12,10 @@ export class SnapshotsService {
         private readonly snapshotsModel: Model<SnapshotDocument>
     ) {}
 
+    async getSnapshotsCount(): Promise<number> {
+        return await this.snapshotsModel.countDocuments({});
+    }
+
     async getOverview(): Promise<string[]> {
         return this.snapshotsModel.distinct('sku');
     }

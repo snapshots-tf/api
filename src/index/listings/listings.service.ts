@@ -11,6 +11,10 @@ export class ListingsService {
         private readonly listingsModel: Model<ListingDocument>
     ) {}
 
+    async getListingsCount(): Promise<number> {
+        return await this.listingsModel.countDocuments({});
+    }
+
     async getBySteamID(steamid: string): Promise<ListingDocument[]> {
         return this.listingsModel
             .find({ 'listing.steamID64': steamid })

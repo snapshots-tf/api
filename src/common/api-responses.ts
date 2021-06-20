@@ -8,6 +8,14 @@ export class Currency {
     metal: number;
 }
 
+export class GetStats {
+    @ApiProperty({ title: 'Amount of listings we have.' })
+    listings: number;
+
+    @ApiProperty({ title: 'Amount of snapshots we have.' })
+    snapshots: number;
+}
+
 export class SnapshotListing {
     @ApiProperty()
     id: string;
