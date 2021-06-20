@@ -1,22 +1,19 @@
 import {
+    BadRequestException,
     Controller,
     Get,
     HttpStatus,
     NotFoundException,
     Param,
-    Query,
 } from '@nestjs/common';
 import {
+    ApiBadRequestResponse,
     ApiOkResponse,
     ApiOperation,
-    ApiParam,
-    ApiQuery,
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
 import { GetSnapshot } from 'src/common/api-responses';
-import QuerySnapshotDTO from 'src/common/dtos/QuerySnapshot.dto';
-import { MakerService } from 'src/snapshotting/maker/maker.service';
 import { SnapshotService } from './snapshot.service';
 
 @ApiTags('snapshot')
@@ -42,6 +39,13 @@ export class SnapshotController {
     })
     async getById(@Param('id') id: string): Promise<any> {
         const snapshot = await this.snapshotService.getByID(id);
+
+        if (typeof snapshot === 'string') {
+            throw new BadRequestException({
+                status: HttpStatus.BAD_REQUEST,
+                error: 'Incorrect ID specified.',
+            });
+        }
 
         if (!snapshot) throw this.notFound;
         return snapshot;

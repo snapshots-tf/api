@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SnapshotNamespace } from 'src/common/namespaces';
+import { isValidObjectID } from 'src/lib/helpers';
 import { ListingDocument } from 'src/schemas/listing.schema';
 import { SnapshotDocument } from 'src/schemas/snapshot.schema';
 
@@ -14,7 +15,9 @@ export class SnapshotService {
         private readonly listingsModel: Model<ListingDocument>
     ) {}
 
-    async getByID(id: string): Promise<SnapshotNamespace.Snapshot> {
+    async getByID(id: string): Promise<SnapshotNamespace.Snapshot | string> {
+        if (!isValidObjectID(id)) return 'Invalid snapshot ID';
+
         return this.snapshotsModel.findOne({ _id: id }).then(async (res) => {
             if (!res) return null;
 

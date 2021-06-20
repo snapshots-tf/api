@@ -1,4 +1,11 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+    BadRequestException,
+    Controller,
+    Get,
+    HttpStatus,
+    Param,
+    Res,
+} from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetListing } from 'src/common/api-responses';
 import { ListingService } from './listing.service';
@@ -8,24 +15,24 @@ import { ListingService } from './listing.service';
 export class ListingController {
     constructor(private readonly listingService: ListingService) {}
 
-    @Get('/steamid/:steamid')
+    @Get('/id/:id')
     @ApiOperation({
-        summary: 'Get latest listing this steamid was found in.',
+        summary: 'Get a listing by ID.',
     })
-    @ApiOkResponse({
-        type: GetListing,
-    })
-    async getBySteamID(@Param('steamid') steamid: string): Promise<any> {
-        const snapshot = await this.listingService.getOneListing({
-            'listing.steamID64': steamid,
-        });
+    async getByID(@Param('id') id: string): Promise<any> {
+        const listing = await this.listingService.getOneListing({ _id: id });
 
-        if (!snapshot) {
-            return {
-                found: false,
-            };
+        if (typeof listing === 'string') {
+            throw new BadRequestException({
+                status: HttpStatus.BAD_REQUEST,
+                error: 'Incorrect ID specified.',
+            });
         }
 
-        return snapshot;
+        return (
+            listing || {
+                found: false,
+            }
+        );
     }
 }
