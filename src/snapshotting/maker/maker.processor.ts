@@ -143,7 +143,7 @@ export class MakerProcessor {
                     }
                 }
 
-                await new this.snapshotsModel({
+                const doc = await new this.snapshotsModel({
                     sku,
                     listings: ids,
                     savedAt: time,
@@ -156,6 +156,7 @@ export class MakerProcessor {
                     },
                     sku,
                     name: stringify(parseSKU(sku)),
+                    id: doc._id,
                 });
 
                 return {
