@@ -1,7 +1,4 @@
-import { Schema } from 'mongoose';
+import { Types } from 'mongoose';
 export function isValidObjectID(id: string): boolean {
-    // @ts-ignore
-    if (new Schema.Types.ObjectId(id) !== id) return false;
-
-    return true;
+    return Types.ObjectId.isValid(id);
 }
