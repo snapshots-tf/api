@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import * as helmet from 'helmet';
 import * as session from 'express-session';
 
+import customCss from './lib/customCss';
+
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
@@ -19,6 +21,7 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('/docs', app, document, {
         customSiteTitle: 'Snapshots.tf Public API',
+        customCss,
     });
 
     app.use(
