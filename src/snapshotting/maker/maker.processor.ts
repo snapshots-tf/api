@@ -19,6 +19,7 @@ import { Job } from 'bull';
 import SPELLS from 'src/lib/spells';
 import PAINTS from 'src/lib/paints';
 import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
+import { getImageFromSKU } from 'src/lib/images';
 
 @Processor('maker')
 export class MakerProcessor {
@@ -35,6 +36,7 @@ export class MakerProcessor {
 
     @Process('snapshot')
     async handleSnapshot(job: Job<{ sku: string }>): Promise<void> {
+        return;
         await this.generateSnapshot(job.data.sku).catch(() => null);
     }
 
@@ -157,6 +159,7 @@ export class MakerProcessor {
                     sku,
                     name: stringify(parseSKU(sku)),
                     id: doc._id,
+                    image: getImageFromSKU(sku),
                 });
 
                 return {
