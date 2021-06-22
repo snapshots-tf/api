@@ -36,8 +36,9 @@ export class MakerProcessor {
 
     @Process('snapshot')
     async handleSnapshot(job: Job<{ sku: string }>): Promise<void> {
-        return;
-        await this.generateSnapshot(job.data.sku).catch(() => null);
+        await this.generateSnapshot(job.data.sku).catch((err) =>
+            this.logger.warn(`Failed to save ${job.data.sku}`, err)
+        );
     }
 
     private parseListing(listing: BuyListing | SellListing): {
@@ -161,6 +162,8 @@ export class MakerProcessor {
                     id: doc._id,
                     image: getImageFromSKU(sku),
                 });
+
+                this.logger.debug(`Saved ${sku}!`);
 
                 return {
                     sku,
