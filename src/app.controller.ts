@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
+    ApiExcludeEndpoint,
     ApiHeader,
     ApiOkResponse,
     ApiOperation,
@@ -20,6 +21,7 @@ import { testSKU } from './lib/skus';
 import { MakerService } from './snapshotting/maker/maker.service';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
 import { ListingsService } from './index/listings/listings.service';
+import { stringify, parseSKU } from 'tf2-item-format/static';
 
 @ApiTags('index')
 @Controller('')
@@ -29,6 +31,50 @@ export class AppController {
         private listingsService: ListingsService,
         private makerService: MakerService
     ) {}
+
+    @Get('/search/:query')
+    @ApiExcludeEndpoint()
+    async search(
+        @Param('query') query: string
+    ): Promise<{ results: { sku: string; name: string }[] }> {
+        query = query.trim();
+
+        if (query.indexOf(';') !== -1) {
+            const test = testSKU(query);
+
+            if (!test) {
+                throw new BadRequestException({
+                    status: HttpStatus.BAD_REQUEST,
+                    error: 'Not a correct SKU!',
+                });
+            } else {
+                return {
+                    results: [
+                        {
+                            sku: query,
+                            name: stringify(parseSKU(query)),
+                        },
+                    ],
+                };
+            }
+        }
+
+        const skus = await this.snapshotsService.getOverview();
+
+        const matches = [];
+
+        for (let i = 0; i < skus.length; i++) {
+            const skuName = stringify(parseSKU(skus[i]));
+
+            if (skuName.toLowerCase().indexOf(query.toLowerCase()) !== -1) {
+                matches.push({ name: skuName, sku: skus[i] });
+            }
+
+            if (matches.length >= 10) break;
+        }
+
+        return { results: matches };
+    }
 
     @Get('/stats')
     @ApiOperation({
