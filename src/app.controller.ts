@@ -22,6 +22,7 @@ import { MakerService } from './snapshotting/maker/maker.service';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
 import { ListingsService } from './index/listings/listings.service';
 import { stringify, parseSKU } from 'tf2-item-format/static';
+import { getImageFromSKU } from './lib/images';
 
 @ApiTags('index')
 @Controller('')
@@ -31,6 +32,22 @@ export class AppController {
         private listingsService: ListingsService,
         private makerService: MakerService
     ) {}
+
+    @Get('/item-info/:sku')
+    @ApiExcludeEndpoint()
+    getItemInfo(@Param('sku') sku: string): {
+        name: string;
+        image: { effect: string; large: string; small: string };
+        sku: string;
+    } {
+        if (!testSKU(sku) || sku.indexOf(';') === -1) return;
+
+        return {
+            name: stringify(parseSKU(sku)),
+            image: getImageFromSKU(sku),
+            sku,
+        };
+    }
 
     @Get('/search/:query')
     @ApiExcludeEndpoint()
