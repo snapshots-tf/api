@@ -36,6 +36,9 @@ export class SnapshotListing {
     buying: boolean;
 
     @ApiProperty()
+    automatic: boolean;
+
+    @ApiProperty()
     listingID: string;
 
     @ApiProperty()

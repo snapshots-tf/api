@@ -24,5 +24,6 @@ export namespace SnapshotNamespace {
         bumped: number;
         created: number;
         buying: boolean;
+        automatic: boolean;
     }
 }

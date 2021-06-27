@@ -95,6 +95,7 @@ export class MakerProcessor {
                                 const parsed = this.parseListing(listing);
                                 return {
                                     buying: side === 'buy',
+                                    automatic: listing.automatic === 1,
                                     listingID: listing.id,
                                     paint: parsed.paint,
                                     spells: parsed.spells,
