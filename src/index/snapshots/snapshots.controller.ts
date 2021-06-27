@@ -2,6 +2,7 @@ import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetSnapshotOverview } from 'src/common/api-responses';
 import { SnapshotNamespace } from 'src/common/namespaces';
+import { stringify, parseSKU } from 'tf2-item-format/static';
 import { SnapshotsService } from './snapshots.service';
 
 @ApiTags('snapshots')
@@ -36,9 +37,13 @@ export class SnapshotsController {
         type: GetSnapshotOverview,
     })
     async getSnapshotsOverview(@Param('sku') sku: string): Promise<{
+        sku: string;
+        name: string;
         overview: { id: string; savedAt: number; listingsAmount: number }[];
     }> {
         return {
+            sku,
+            name: stringify(parseSKU(sku)),
             overview: await this.snapshotsService.getSnapshotsOverview(sku),
         };
     }

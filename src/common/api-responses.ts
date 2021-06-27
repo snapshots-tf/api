@@ -110,6 +110,12 @@ export class GetSnapshot {
 
 export class GetSnapshotOverview {
     @ApiProperty()
+    sku: string;
+
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
     overview: {
         id: string;
 
