@@ -25,6 +25,7 @@ export class SnapshotsService {
     ): Promise<{ id: string; savedAt: number; listingsAmount: number }[]> {
         return this.snapshotsModel
             .find({ sku })
+            .sort('-savedAt')
             .lean()
             .limit(500)
             .then((res) =>
