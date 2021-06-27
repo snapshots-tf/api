@@ -232,7 +232,7 @@ export class MakerProcessor {
                     unusualAccepted !== suggestionUnusual ||
                     created !== suggestionsCreated
                 ) {
-                    toUpdate['suggestions'] = has.suggestions.slice().push({
+                    toUpdate['suggestions'] = has.suggestions.push({
                         time,
                         created: suggestionsCreated,
                         nonUnusualAccepted: suggestionsAccepted,
@@ -243,7 +243,7 @@ export class MakerProcessor {
                 const { amount } = has.donations[has.donations.length - 1];
 
                 if (amount !== donated) {
-                    toUpdate['donations'] = has.donations.slice().push({
+                    toUpdate['donations'] = has.donations.push({
                         time,
                         amount: donated,
                     });
@@ -252,7 +252,7 @@ export class MakerProcessor {
                 const { name } = has.names[has.names.length - 1];
 
                 if (name !== user.name) {
-                    toUpdate['names'] = has.names.slice().push({
+                    toUpdate['names'] = has.names.push({
                         time,
                         name: user.name,
                     });
@@ -262,7 +262,7 @@ export class MakerProcessor {
                     has.trusts[has.trusts.length - 1];
 
                 if (positive !== positiveTrust || negative !== negativeTrust) {
-                    toUpdate['trusts'] = has.trusts.slice().push({
+                    toUpdate['trusts'] = has.trusts.push({
                         time,
                         positive: positiveTrust,
                         negative: negativeTrust,
@@ -270,6 +270,7 @@ export class MakerProcessor {
                 }
 
                 if (Object.keys(toUpdate).length !== 0) {
+                    this.logger.debug(JSON.stringify(toUpdate));
                     await this.usersModel.updateOne(
                         {
                             steamID64,
