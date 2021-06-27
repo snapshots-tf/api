@@ -78,16 +78,22 @@ export class AppController {
 
         const skus = await this.snapshotsService.getOverview();
 
-        const matches = [];
+        let matches = [];
 
         for (let i = 0; i < skus.length; i++) {
             const skuName = stringify(parseSKU(skus[i]));
 
-            if (skuName.toLowerCase().indexOf(query.toLowerCase()) !== -1) {
+            if (
+                skuName.toLowerCase().indexOf(query.toLowerCase()) !== -1 &&
+                matches.length < 10
+            ) {
                 matches.push({ name: skuName, sku: skus[i] });
             }
 
-            if (matches.length >= 10) break;
+            if (skuName.toLowerCase() === query.toLowerCase()) {
+                matches = [{ name: skuName, sku: skus[i] }];
+                break;
+            }
         }
 
         return { results: matches };
