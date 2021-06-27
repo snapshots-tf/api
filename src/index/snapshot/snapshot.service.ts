@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SnapshotNamespace } from 'src/common/namespaces';
-import { isValidObjectID } from 'src/lib/helpers';
+import { isValidObjectID, returnListings } from 'src/lib/helpers';
 import { ListingDocument } from 'src/schemas/listing.schema';
 import { SnapshotDocument } from 'src/schemas/snapshot.schema';
 
@@ -26,7 +26,10 @@ export class SnapshotService {
             } as any;
             delete copy.__v;
 
-            copy.listings = await this.returnListings(res.listings);
+            copy.listings = await returnListings(
+                res.listings,
+                this.listingsModel
+            );
 
             return copy;
         });
@@ -46,31 +49,12 @@ export class SnapshotService {
                 } as any;
                 delete copy.__v;
 
-                copy.listings = await this.returnListings(res.listings);
+                copy.listings = await returnListings(
+                    res.listings,
+                    this.listingsModel
+                );
 
                 return copy;
             });
-    }
-
-    private async returnListings(
-        ids: string[]
-    ): Promise<SnapshotNamespace.Listing[]> {
-        // @ts-ignore
-        return this.listingsModel.find({ _id: { $in: ids } }).then((res) =>
-            res.map((listing) => {
-                const obj = Object.assign(
-                    {
-                        id: listing._id,
-                        savedAt: listing.savedAt,
-                        lastSeen: listing.lastSeen,
-                    },
-                    listing.listing
-                );
-
-                // @ts-ignore
-                delete obj.$init;
-                return obj;
-            })
-        );
     }
 }
