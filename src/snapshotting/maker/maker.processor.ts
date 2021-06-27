@@ -232,45 +232,52 @@ export class MakerProcessor {
                     unusualAccepted !== suggestionUnusual ||
                     created !== suggestionsCreated
                 ) {
-                    toUpdate['suggestions'] = has.suggestions.push({
+                    has.suggestions.push({
                         time,
                         created: suggestionsCreated,
                         nonUnusualAccepted: suggestionsAccepted,
                         unusualAccepted: suggestionUnusual,
                     });
+                    toUpdate['suggestions'] = has.suggestions;
                 }
 
                 const { amount } = has.donations[has.donations.length - 1];
 
                 if (amount !== donated) {
-                    toUpdate['donations'] = has.donations.push({
+                    has.donations.push({
                         time,
                         amount: donated,
                     });
+                    toUpdate['donations'] = has.donations;
                 }
 
                 const { name } = has.names[has.names.length - 1];
 
                 if (name !== user.name) {
-                    toUpdate['names'] = has.names.push({
+                    has.names.push({
                         time,
                         name: user.name,
                     });
+                    toUpdate['names'] = has.names;
                 }
 
                 const { positive, negative } =
                     has.trusts[has.trusts.length - 1];
 
                 if (positive !== positiveTrust || negative !== negativeTrust) {
-                    toUpdate['trusts'] = has.trusts.push({
+                    has.trusts.push({
                         time,
                         positive: positiveTrust,
                         negative: negativeTrust,
                     });
+                    toUpdate['trusts'] = has.trusts;
                 }
 
                 if (Object.keys(toUpdate).length !== 0) {
                     this.logger.debug(JSON.stringify(toUpdate));
+
+                    toUpdate['name'] = user.name;
+                    toUpdate['avatar'] = user.avatar;
                     await this.usersModel.updateOne(
                         {
                             steamID64,
