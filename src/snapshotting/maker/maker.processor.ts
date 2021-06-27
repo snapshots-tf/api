@@ -44,6 +44,8 @@ export class MakerProcessor {
     }
 
     private generateSnapshot(sku: string): Promise<SnapshotNamespace.Snapshot> {
+        const name = stringify(parseSKU(sku));
+
         return axios({
             method: 'GET',
             url: 'https://backpack.tf/api/classifieds/search/v1',
@@ -59,8 +61,19 @@ export class MakerProcessor {
 
                 ['buy', 'sell'].forEach((side) => {
                     listings = listings.concat(
-                        result.data[side].listings.map(
-                            (listing: BuyListing | SellListing) => {
+                        result.data[side].listings
+                            .filter((listing: BuyListing | SellListing) => {
+                                if (
+                                    listing.item.name
+                                        .replace('The', '')
+                                        .trim() !==
+                                    name.replace('The', '').trim()
+                                )
+                                    return false;
+
+                                return true;
+                            })
+                            .map((listing: BuyListing | SellListing) => {
                                 if (side === 'buy') buyListings++;
 
                                 const parsed = this.parseListing(listing);
@@ -78,8 +91,7 @@ export class MakerProcessor {
                                     created: listing.created,
                                     steamID64: listing.steamid,
                                 };
-                            }
-                        )
+                            })
                     );
                 });
 
