@@ -32,12 +32,14 @@ export class Listing {
             paint: {
                 type: String,
                 required: false,
+                index: true,
             },
             parts: {
                 type: Array,
             },
             spells: {
                 type: Array,
+                index: true,
             },
             currencies: {
                 type: Object,
@@ -49,6 +51,9 @@ export class Listing {
                 type: Number,
             },
             buying: {
+                type: Boolean,
+            },
+            automatic: {
                 type: Boolean,
             },
         })
