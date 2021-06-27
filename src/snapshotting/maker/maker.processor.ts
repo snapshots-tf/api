@@ -20,6 +20,7 @@ import SPELLS from 'src/lib/spells';
 import PAINTS from 'src/lib/paints';
 import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
 import { getImageFromSKU } from 'src/lib/images';
+import { UserDocument } from 'src/schemas/users.schema';
 
 @Processor('maker')
 export class MakerProcessor {
@@ -30,7 +31,8 @@ export class MakerProcessor {
     constructor(
         @InjectModel('snapshots')
         private snapshotsModel: Model<SnapshotDocument>,
-        @InjectModel('listings') private listingsModule: Model<ListingDocument>,
+        @InjectModel('listings') private listingsModel: Model<ListingDocument>,
+        @InjectModel('users') private usersModel: Model<UserDocument>,
         private snapshotsGateway: SnapshotsGateway
     ) {}
 
@@ -39,6 +41,233 @@ export class MakerProcessor {
         await this.generateSnapshot(job.data.sku).catch((err) =>
             this.logger.warn(`Failed to save ${job.data.sku}`, err)
         );
+    }
+
+    private generateSnapshot(sku: string): Promise<SnapshotNamespace.Snapshot> {
+        return axios({
+            method: 'GET',
+            url: 'https://backpack.tf/api/classifieds/search/v1',
+            params: this.parseSKUtoBPTF(sku),
+            timeout: 10 * 1000,
+        })
+            .then(async (result: { data: SearchListingResponse }) => {
+                let listings: SnapshotNamespace.Listing[] = [];
+
+                let buyListings = 0;
+
+                const steamIDS: string[] = [];
+
+                ['buy', 'sell'].forEach((side) => {
+                    listings = listings.concat(
+                        result.data[side].listings.map(
+                            (listing: BuyListing | SellListing) => {
+                                if (side === 'buy') buyListings++;
+
+                                const parsed = this.parseListing(listing);
+                                return {
+                                    buying: side === 'buy',
+                                    automatic: listing.automatic === 1,
+                                    listingID: listing.id,
+                                    paint: parsed.paint,
+                                    spells: parsed.spells,
+                                    parts: parsed.parts,
+                                    currencies: fillCurrency(
+                                        listing.currencies
+                                    ),
+                                    bumped: listing.bump,
+                                    created: listing.created,
+                                    steamID64: listing.steamid,
+                                };
+                            }
+                        )
+                    );
+                });
+
+                const ids = [];
+
+                const time = this.getUnix();
+
+                for (let i = 0; i < listings.length; i++) {
+                    const has = await this.listingsModel
+                        .findOne({ 'listing.listingID': listings[i].listingID })
+                        .lean();
+
+                    if (!has) {
+                        const doc = await new this.listingsModel({
+                            sku,
+                            listing: {
+                                ...listings[i],
+                            },
+                            savedAt: time,
+                            lastSeen: time,
+                        }).save();
+
+                        ids.push(doc._id);
+                    } else {
+                        await this.listingsModel.updateOne(
+                            {
+                                'listing.listingID': listings[i].listingID,
+                            },
+                            {
+                                listing: listings[i],
+                                lastSeen: time,
+                            }
+                        );
+
+                        ids.push(has._id);
+                    }
+
+                    if (!steamIDS.includes(listings[i].steamID64)) {
+                        steamIDS.push(listings[i].steamID64);
+                    }
+                }
+
+                const doc = await new this.snapshotsModel({
+                    sku,
+                    listings: ids,
+                    savedAt: time,
+                }).save();
+
+                await this.saveUserData(steamIDS);
+
+                this.snapshotsGateway.emitMessage('snapshot', {
+                    listings: {
+                        buy: buyListings,
+                        sell: listings.length - buyListings,
+                    },
+                    sku,
+                    name: stringify(parseSKU(sku)),
+                    id: doc._id,
+                    image: getImageFromSKU(sku),
+                });
+
+                this.logger.debug(`Saved ${sku}!`);
+
+                return {
+                    sku,
+                    listings: ids,
+                };
+            })
+            .catch(() => null);
+    }
+
+    private async saveUserData(steamIDS: string[]): Promise<void> {
+        const { data } = await axios({
+            method: 'GET',
+            url: 'https://backpack.tf/api/users/info/v1',
+            params: {
+                key: process.env.BPTF_API_KEY,
+                steamids: steamIDS.join(','),
+            },
+        });
+
+        const time = this.getUnix();
+
+        for (const steamID64 in data.users) {
+            const user = data.users[steamID64];
+            const has = await this.usersModel
+                .findOne({ steamID64: steamID64 })
+                .lean();
+
+            const donated = parseFloat((user?.donated || 0).toFixed(2));
+            const suggestionsCreated = user?.voting?.suggestions?.created || 0;
+            const suggestionsAccepted =
+                user?.voting?.suggestions?.accepted || 0;
+            const suggestionUnusual =
+                user?.voting?.suggestions?.accepted_unusual || 0;
+
+            const positiveTrust = user?.trust?.positive || 0;
+            const negativeTrust = user?.trust?.negative || 0;
+
+            if (!has) {
+                await new this.usersModel({
+                    steamID64,
+                    name: user.name,
+                    avatar: user.avatar,
+                    donations: [{ time, amount: donated }],
+                    suggestions: [
+                        {
+                            time,
+                            created: suggestionsCreated,
+                            nonUnusualAccepted: suggestionsAccepted,
+                            unusualAccepted: suggestionUnusual,
+                        },
+                    ],
+                    trusts: [
+                        {
+                            time,
+                            positive: positiveTrust,
+                            negative: negativeTrust,
+                        },
+                    ],
+                    names: [
+                        {
+                            time,
+                            name: user.name,
+                        },
+                    ],
+                }).save();
+
+                this.logger.debug(`Saved ${steamID64}!`);
+            } else {
+                const toUpdate = {};
+
+                const { nonUnusualAccepted, unusualAccepted, created } =
+                    has.suggestions[has.suggestions.length - 1];
+
+                if (
+                    nonUnusualAccepted !== suggestionsAccepted ||
+                    unusualAccepted !== suggestionUnusual ||
+                    created !== suggestionsCreated
+                ) {
+                    toUpdate['suggestions'] = has.suggestions.slice().push({
+                        time,
+                        created: suggestionsCreated,
+                        nonUnusualAccepted: suggestionsAccepted,
+                        unusualAccepted: suggestionUnusual,
+                    });
+                }
+
+                const { amount } = has.donations[has.donations.length - 1];
+
+                if (amount !== donated) {
+                    toUpdate['donations'] = has.donations.slice().push({
+                        time,
+                        amount: donated,
+                    });
+                }
+
+                const { name } = has.names[has.names.length - 1];
+
+                if (name !== user.name) {
+                    toUpdate['names'] = has.names.slice().push({
+                        time,
+                        name: user.name,
+                    });
+                }
+
+                const { positive, negative } =
+                    has.trusts[has.trusts.length - 1];
+
+                if (positive !== positiveTrust || negative !== negativeTrust) {
+                    toUpdate['trusts'] = has.trusts.slice().push({
+                        time,
+                        positive: positiveTrust,
+                        negative: negativeTrust,
+                    });
+                }
+
+                if (Object.keys(toUpdate).length !== 0) {
+                    await this.usersModel.updateOne(
+                        {
+                            steamID64,
+                        },
+                        toUpdate
+                    );
+                    this.logger.debug(`Updated ${steamID64}!`);
+                }
+            }
+        }
     }
 
     private parseListing(listing: BuyListing | SellListing): {
@@ -72,106 +301,6 @@ export class MakerProcessor {
         }
 
         return parsed;
-    }
-
-    private generateSnapshot(sku: string): Promise<SnapshotNamespace.Snapshot> {
-        return axios({
-            method: 'GET',
-            url: 'https://backpack.tf/api/classifieds/search/v1',
-            params: this.parseSKUtoBPTF(sku),
-            timeout: 10 * 1000,
-        })
-            .then(async (result: { data: SearchListingResponse }) => {
-                let listings: SnapshotNamespace.Listing[] = [];
-
-                let buyListings = 0;
-
-                ['buy', 'sell'].forEach((side) => {
-                    listings = listings.concat(
-                        result.data[side].listings.map(
-                            (listing: BuyListing | SellListing) => {
-                                if (side === 'buy') buyListings++;
-
-                                const parsed = this.parseListing(listing);
-                                return {
-                                    buying: side === 'buy',
-                                    automatic: listing.automatic === 1,
-                                    listingID: listing.id,
-                                    paint: parsed.paint,
-                                    spells: parsed.spells,
-                                    parts: parsed.parts,
-                                    currencies: fillCurrency(
-                                        listing.currencies
-                                    ),
-                                    bumped: listing.bump,
-                                    created: listing.created,
-                                    steamID64: listing.steamid,
-                                };
-                            }
-                        )
-                    );
-                });
-
-                const ids = [];
-
-                const time = this.getUnix();
-
-                for (let i = 0; i < listings.length; i++) {
-                    const has = await this.listingsModule
-                        .findOne({ 'listing.listingID': listings[i].listingID })
-                        .lean();
-
-                    if (!has) {
-                        const doc = await new this.listingsModule({
-                            sku,
-                            listing: {
-                                ...listings[i],
-                            },
-                            savedAt: time,
-                            lastSeen: time,
-                        }).save();
-
-                        ids.push(doc._id);
-                    } else {
-                        await this.listingsModule.updateOne(
-                            {
-                                'listing.listingID': listings[i].listingID,
-                            },
-                            {
-                                listing: listings[i],
-                                lastSeen: time,
-                            }
-                        );
-
-                        ids.push(has._id);
-                    }
-                }
-
-                const doc = await new this.snapshotsModel({
-                    sku,
-                    listings: ids,
-                    savedAt: time,
-                }).save();
-
-                this.snapshotsGateway.emitMessage('snapshot', {
-                    listings: {
-                        buy: buyListings,
-                        sell: listings.length - buyListings,
-                    },
-                    sku,
-                    name: stringify(parseSKU(sku)),
-                    id: doc._id,
-                    image: getImageFromSKU(sku),
-                });
-
-                this.logger.debug(`Saved ${sku}!`);
-
-                return {
-                    sku,
-                    listings: ids,
-                };
-            })
-            .catch(() => null);
     }
 
     private parseSKUtoBPTF(sku: string) {

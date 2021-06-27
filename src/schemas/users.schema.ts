@@ -8,11 +8,41 @@ export class User {
     @Prop({ required: false })
     id: string;
 
-    @Prop({ required: true })
+    @Prop({ required: true, index: true })
     steamID64: string;
 
     @Prop({ required: true })
-    displayName: string;
+    name: string;
+
+    @Prop({ required: true })
+    avatar: string;
+
+    @Prop({ required: true })
+    donations: {
+        time: number;
+        amount: number;
+    }[];
+
+    @Prop({ required: true })
+    suggestions: {
+        time: number;
+        created: number;
+        nonUnusualAccepted: number;
+        unusualAccepted: number;
+    }[];
+
+    @Prop({ required: true })
+    names: {
+        time: number;
+        name: string;
+    }[];
+
+    @Prop({ required: true })
+    trusts: {
+        time: number;
+        positive: number;
+        negative: number;
+    }[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

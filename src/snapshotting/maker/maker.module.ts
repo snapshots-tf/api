@@ -7,6 +7,7 @@ import { MakerService } from './maker.service';
 import { SnapshotSchema } from '../../schemas/snapshot.schema';
 import { ListingSchema } from '../../schemas/listing.schema';
 import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
+import { UserSchema } from 'src/schemas/users.schema';
 
 @Module({
     imports: [
@@ -20,6 +21,12 @@ import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
             {
                 name: 'listings',
                 schema: ListingSchema,
+            },
+        ]),
+        MongooseModule.forFeature([
+            {
+                name: 'users',
+                schema: UserSchema,
             },
         ]),
     ],
