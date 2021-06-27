@@ -1,6 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetListing } from 'src/common/api-responses';
+import { ParseSteamIDPipe } from 'src/pipes/parse-steamid.pipe';
 import { ListingsService } from './listings.service';
 
 @ApiTags('listings')
@@ -12,7 +13,9 @@ export class ListingsController {
     @ApiOperation({
         summary: 'Get latest 100 listings from this user.',
     })
-    async getBySKU(@Param('steamid') steamid: string): Promise<any> {
-        return this.listingsService.getBySteamID(steamid);
+    async getBySKU(
+        @Param('steamID', new ParseSteamIDPipe()) steamID: string
+    ): Promise<any> {
+        return this.listingsService.getBySteamID(steamID);
     }
 }

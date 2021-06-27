@@ -37,6 +37,8 @@
     "bull": "^3.22.6",
     "cache-manager": "^3.4.3",
     "cache-manager-redis-store": "^2.0.0",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
     "connect-mongo": "^4.4.1",
     "express-session": "^1.17.2",
     "helmet": "^4.6.0",

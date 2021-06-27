@@ -22,6 +22,7 @@ import { SnapshotSchema } from './schemas/snapshot.schema';
 import { MakerService } from './snapshotting/maker/maker.service';
 import { MeModule } from './users/me/me.module';
 import { ListingsService } from './index/listings/listings.service';
+import { UsersModule } from './index/users/users.module';
 
 @Module({
     imports: [
@@ -72,6 +73,7 @@ import { ListingsService } from './index/listings/listings.service';
             name: 'maker',
         }),
         MeModule,
+        UsersModule,
     ],
     providers: [
         {
