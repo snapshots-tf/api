@@ -21,7 +21,7 @@ import { testSKU } from './lib/skus';
 import { MakerService } from './snapshotting/maker/maker.service';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
 import { ListingsService } from './index/listings/listings.service';
-import { stringify, parseSKU, schema } from 'tf2-item-format/static';
+import { stringify, parseSKU } from 'tf2-item-format/static';
 import { getImageFromSKU } from './lib/images';
 import { BadRequestError } from 'passport-headerapikey';
 
@@ -92,7 +92,7 @@ export class AppController {
             }
 
             if (skuName.toLowerCase() === query.toLowerCase()) {
-                matches.unshift([{ name: skuName, sku: skus[i] }]);
+                matches.push({ name: skuName, sku: skus[i] });
                 break;
             }
         }
