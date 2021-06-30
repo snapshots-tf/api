@@ -1,5 +1,10 @@
 import axios from 'axios';
-import { stringify, parseSKU } from 'tf2-item-format/static';
+import {
+    stringify,
+    parseSKU,
+    parseString,
+    toSKU,
+} from 'tf2-item-format/static';
 import { requireStatic, SchemaEnum } from 'tf2-static-schema';
 
 import { Process, Processor } from '@nestjs/bull';
@@ -21,6 +26,7 @@ import PAINTS from 'src/lib/paints';
 import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
 import { getImageFromSKU } from 'src/lib/images';
 import { UserDocument } from 'src/schemas/users.schema';
+import { promiseDelay } from 'src/lib/helpers';
 
 @Processor('maker')
 export class MakerProcessor {
@@ -37,130 +43,210 @@ export class MakerProcessor {
     ) {}
 
     @Process('snapshot')
-    async handleSnapshot(job: Job<{ sku: string }>): Promise<void> {
-        await this.generateSnapshot(job.data.sku).catch((err) =>
-            this.logger.warn(`Failed to save ${job.data.sku}`, err)
-        );
+    async handleSnapshot(
+        job: Job<{ defindex: string | number }>
+    ): Promise<void> {
+        console.log('processing ' + job.data.defindex);
+        await this.generateSnapshots(job.data.defindex).catch((err) => {
+            console.log(err);
+        });
+        console.log('done procerssing');
+
+        return;
     }
 
-    private generateSnapshot(sku: string): Promise<SnapshotNamespace.Snapshot> {
-        const name = stringify(parseSKU(sku));
+    private async getAllListings(
+        defindex: string | number,
+        quality: number = 0,
+        previousResult: (BuyListing | SellListing)[] = [],
+        page = 1
+    ): Promise<(BuyListing | SellListing)[]> {
+        const start = new Date().getTime();
 
-        return axios({
+        console.log('Searching', {
+            quality,
+            defindex,
+            page,
+            previousAmount: previousResult.length,
+        });
+
+        const { data } = (await axios({
             method: 'GET',
             url: 'https://backpack.tf/api/classifieds/search/v1',
-            params: this.parseSKUtoBPTF(sku),
+            params: {
+                page,
+                item: stringify(parseSKU(defindex + ';6')),
+                tradable: 1,
+                key: process.env.BPTF_API_KEY,
+                fold: 0,
+                page_size: 30,
+                quality,
+            },
             timeout: 10 * 1000,
-        })
-            .then(async (result: { data: SearchListingResponse }) => {
-                let listings: SnapshotNamespace.Listing[] = [];
+        })) as { data: SearchListingResponse };
 
-                let buyListings = 0;
+        const end = new Date().getTime();
 
-                const steamIDS: string[] = [];
+        const qualitySkips = {
+            1: 3,
+            11: 13,
+        };
 
-                ['buy', 'sell'].forEach((side) => {
-                    listings = listings.concat(
-                        result.data[side].listings
-                            .filter((listing: BuyListing | SellListing) => {
-                                if (
-                                    listing.item.name
-                                        .replace('The', '')
-                                        .trim() !==
-                                    name.replace('The', '').trim()
-                                )
-                                    return false;
+        const shouldPaginateAgain =
+            data.sell.listings.length >= 30 || data.buy.listings.length >= 30;
 
-                                return true;
-                            })
-                            .map((listing: BuyListing | SellListing) => {
-                                if (side === 'buy') buyListings++;
+        // @ts-ignore
+        const result = data.sell.listings.concat(data.buy.listings);
 
-                                const parsed = this.parseListing(listing);
-                                return {
-                                    buying: side === 'buy',
-                                    automatic: listing.automatic === 1,
-                                    listingID: listing.id,
-                                    paint: parsed.paint,
-                                    spells: parsed.spells,
-                                    parts: parsed.parts,
-                                    currencies: fillCurrency(
-                                        listing.currencies
-                                    ),
-                                    bumped: listing.bump,
-                                    created: listing.created,
-                                    steamID64: listing.steamid,
-                                };
-                            })
-                    );
-                });
+        if (shouldPaginateAgain) {
+            await promiseDelay(1000 - (end - start));
 
-                const ids = [];
+            return this.getAllListings(
+                defindex,
+                quality,
+                previousResult.concat(result),
+                page + 1
+            );
+        }
 
-                const time = this.getUnix();
+        if (quality == 15) return previousResult.concat(result || []);
 
-                for (let i = 0; i < listings.length; i++) {
-                    const has = await this.listingsModel
-                        .findOne({ 'listing.listingID': listings[i].listingID })
-                        .lean();
+        if (quality !== 15) {
+            page = 0;
 
-                    if (!has) {
-                        const doc = await new this.listingsModel({
-                            sku,
-                            listing: {
-                                ...listings[i],
-                            },
-                            savedAt: time,
+            await promiseDelay(1000 - (end - start));
+
+            if (qualitySkips[quality]) quality = qualitySkips[quality];
+            else quality++;
+
+            return this.getAllListings(
+                defindex,
+                quality,
+                previousResult.concat(result),
+                page + 1
+            );
+        }
+    }
+
+    private async generateSnapshots(defindex: string | number): Promise<void> {
+        const listings = await this.getAllListings(defindex);
+        const time = this.getUnix();
+
+        console.log('Got all listings: ' + listings);
+
+        const snapshots: {
+            [sku: string]: SnapshotNamespace.Listing[];
+        } = {};
+
+        const steamIDS: string[] = [];
+
+        for (let i = 0; i < listings.length; i++) {
+            const listing = listings[i];
+
+            const sku = toSKU(parseString(listing.item.name, true, true));
+
+            const parsed = this.parseListing(listing);
+
+            if (!steamIDS.includes(listing.steamid))
+                steamIDS.push(listing.steamid);
+
+            const snapshotListing = {
+                buying: listing.intent === 0,
+                automatic: listing.automatic === 1,
+                listingID: listing.id,
+                paint: parsed.paint,
+                spells: parsed.spells,
+                parts: parsed.parts,
+                currencies: fillCurrency(listing.currencies),
+                bumped: listing.bump,
+                created: listing.created,
+                steamID64: listing.steamid,
+            };
+
+            if (!snapshots[sku]) snapshots[sku] = [];
+            snapshots[sku].push(snapshotListing);
+        }
+
+        for (const sku in snapshots) {
+            const ids: string[] = [];
+
+            let buyListings = 0;
+
+            for (let i = 0; i < snapshots[sku].length; i++) {
+                const listing = snapshots[sku][i];
+                const has = await this.listingsModel
+                    .findOne({
+                        'listing.listingID': listing.listingID,
+                    })
+                    .lean();
+
+                if (listing.buying) buyListings++;
+
+                if (!has) {
+                    const doc = await new this.listingsModel({
+                        sku,
+                        listing,
+                        savedAt: time,
+                        lastSeen: time,
+                    }).save();
+
+                    ids.push(doc._id);
+                } else {
+                    await this.listingsModel.updateOne(
+                        {
+                            'listing.listingID': listing.listingID,
+                        },
+                        {
+                            listing: listing,
                             lastSeen: time,
-                        }).save();
+                        }
+                    );
 
-                        ids.push(doc._id);
-                    } else {
-                        await this.listingsModel.updateOne(
-                            {
-                                'listing.listingID': listings[i].listingID,
-                            },
-                            {
-                                listing: listings[i],
-                                lastSeen: time,
-                            }
-                        );
-
-                        ids.push(has._id);
-                    }
-
-                    if (!steamIDS.includes(listings[i].steamID64)) {
-                        steamIDS.push(listings[i].steamID64);
-                    }
+                    ids.push(has._id);
                 }
+            }
 
-                const doc = await new this.snapshotsModel({
-                    sku,
-                    listings: ids,
-                    savedAt: time,
-                }).save();
+            const doc = await new this.snapshotsModel({
+                sku,
+                listings: ids,
+                savedAt: time,
+            }).save();
 
-                await this.saveUserData(steamIDS);
+            this.snapshotsGateway.emitMessage('snapshot', {
+                listings: {
+                    buy: buyListings,
+                    sell: snapshots[sku].length - buyListings,
+                },
+                sku,
+                name: stringify(parseSKU(sku)),
+                id: doc._id,
+                image: getImageFromSKU(sku),
+            });
 
-                this.snapshotsGateway.emitMessage('snapshot', {
-                    listings: {
-                        buy: buyListings,
-                        sell: listings.length - buyListings,
-                    },
-                    sku,
-                    name: stringify(parseSKU(sku)),
-                    id: doc._id,
-                    image: getImageFromSKU(sku),
-                });
+            this.logger.debug(`Saved ${sku}!`);
+        }
 
-                this.logger.debug(`Saved ${sku}!`);
+        await this.saveManyUsers(steamIDS);
+    }
 
-                return {
-                    sku,
-                    listings: ids,
-                };
-            })
-            .catch(() => null);
+    private async saveManyUsers(steamIDS: string[]): Promise<void> {
+        const chunks = steamIDS.reduce((resultArray, item, index) => {
+            const chunkIndex = Math.floor(index / 100);
+
+            if (!resultArray[chunkIndex]) {
+                resultArray[chunkIndex] = []; // start a new chunk
+            }
+
+            resultArray[chunkIndex].push(item);
+
+            return resultArray;
+        }, []);
+
+        for (let i = 0; i < chunks.length; i++) {
+            try {
+                await this.saveUserData(chunks[i]);
+            } catch (err) {}
+        }
     }
 
     private async saveUserData(steamIDS: string[]): Promise<void> {
@@ -321,27 +407,6 @@ export class MakerProcessor {
         }
 
         return parsed;
-    }
-
-    private parseSKUtoBPTF(sku: string) {
-        const item_prop = parseSKU(sku);
-        const australium = item_prop.australium === true ? 1 : -1;
-        const craftable = item_prop.craftable === true ? 1 : -1;
-
-        const options = {
-            page_size: 30,
-            item: stringify(parseSKU(`${sku.split(';')[0]};6`)),
-            quality: item_prop.quality,
-            killstreak_tier: item_prop.killstreak ? item_prop.killstreak : 0,
-            australium: australium,
-            craftable: craftable,
-            key: process.env.BPTF_API_KEY,
-            particle: null,
-        };
-
-        if (item_prop.effect !== null) options.particle = item_prop.effect;
-
-        return options;
     }
 
     private getUnix(): number {

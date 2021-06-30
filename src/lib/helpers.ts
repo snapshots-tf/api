@@ -1,8 +1,17 @@
 import { Model, Types } from 'mongoose';
 import { SnapshotNamespace } from 'src/common/namespaces';
 import { ListingDocument } from 'src/schemas/listing.schema';
+
 export function isValidObjectID(id: string): boolean {
     return Types.ObjectId.isValid(id);
+}
+
+export function promiseDelay(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, ms);
+    });
 }
 
 export async function returnListings(
