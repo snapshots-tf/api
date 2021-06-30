@@ -53,7 +53,8 @@ export class SnapshotController {
 
     @Get('/sku/:sku')
     @ApiOperation({
-        summary: 'Get a snapshot.',
+        summary:
+            'Get a snapshot by SKU! You will only get the latest one we have if you want a specific snapshot then please use the /snapshots/overview/sku endpoint first and then search by ID.',
     })
     @ApiResponse({
         status: 404,

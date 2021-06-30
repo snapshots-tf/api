@@ -19,7 +19,7 @@ export class UsersController {
     })
     public async getUsers(
         @Query(new ValidationPipe({ transform: true })) query: QueryUserDTO
-    ): Promise<any> {
+    ): Promise<{ users: any[]; count: number }> {
         return this.usersService.getUsers(query.steamIDS);
     }
 

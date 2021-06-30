@@ -21,8 +21,9 @@ import { testSKU } from './lib/skus';
 import { MakerService } from './snapshotting/maker/maker.service';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
 import { ListingsService } from './index/listings/listings.service';
-import { stringify, parseSKU } from 'tf2-item-format/static';
+import { stringify, parseSKU, schema } from 'tf2-item-format/static';
 import { getImageFromSKU } from './lib/images';
+import { BadRequestError } from 'passport-headerapikey';
 
 @ApiTags('index')
 @Controller('')
@@ -91,7 +92,7 @@ export class AppController {
             }
 
             if (skuName.toLowerCase() === query.toLowerCase()) {
-                matches = [{ name: skuName, sku: skus[i] }];
+                matches.unshift([{ name: skuName, sku: skus[i] }]);
                 break;
             }
         }
@@ -114,10 +115,9 @@ export class AppController {
         };
     }
 
-    @Post('/request/:sku')
+    @Post('/request/:defindex')
     @ApiOperation({
-        summary:
-            'Request an item to be snapshotted, returns an expected unix timestamp on when it (if all goes well) is accessible.',
+        summary: 'Request a defindex to be snapshotted.',
     })
     @UseGuards(AuthGuard('api-key'))
     @ApiHeader({
@@ -126,16 +126,19 @@ export class AppController {
             "This key is required for this endpoint to work, get it by first going to /auth/steam then /me/api-key. It's bound to the account you sign in with.",
     })
     async request(
-        @Param('sku') sku: string
+        @Param('defindex') defindex: string
     ): Promise<{ enqueued: boolean; expected: number }> {
-        if (!testSKU(sku))
-            throw new BadRequestException({
-                status: HttpStatus.BAD_REQUEST,
-                error: 'Improper SKU',
-            });
+        if (defindex.indexOf(';') !== -1)
+            throw new BadRequestError('Incorrect defindex.');
 
         try {
-            const when = await this.makerService.enqueue(sku);
+            stringify(parseSKU(defindex + ';6'));
+        } catch (err) {
+            throw new BadRequestError('Incorrect defindex.');
+        }
+
+        try {
+            const when = await this.makerService.enqueue(defindex);
 
             return {
                 enqueued: true,

@@ -72,10 +72,14 @@ export class TasksService {
 
         const items = response.data.response.items;
 
-        let defindexes = [];
+        const defindexes = [];
 
         for (const name in items) {
-            defindexes = defindexes.concat(items[name].defindex);
+            for (let i = 0; i < items[name].defindex.length; i++) {
+                if (!defindexes.includes(items[name].defindex[i])) {
+                    defindexes.push(items[name].defindex[i]);
+                }
+            }
         }
 
         return defindexes;

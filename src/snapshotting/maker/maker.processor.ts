@@ -46,6 +46,8 @@ export class MakerProcessor {
     async handleSnapshot(
         job: Job<{ defindex: string | number }>
     ): Promise<void> {
+        if (process.env.DEV === 'true') return;
+
         await this.generateSnapshots(job.data.defindex).catch((err) => {
             console.log(err);
         });
