@@ -46,13 +46,9 @@ export class MakerProcessor {
     async handleSnapshot(
         job: Job<{ defindex: string | number }>
     ): Promise<void> {
-        console.log('processing ' + job.data.defindex);
         await this.generateSnapshots(job.data.defindex).catch((err) => {
             console.log(err);
         });
-        console.log('done procerssing');
-
-        return;
     }
 
     private async getAllListings(
@@ -62,13 +58,6 @@ export class MakerProcessor {
         page = 1
     ): Promise<(BuyListing | SellListing)[]> {
         const start = new Date().getTime();
-
-        console.log('Searching', {
-            quality,
-            defindex,
-            page,
-            previousAmount: previousResult.length,
-        });
 
         const { data } = (await axios({
             method: 'GET',
@@ -131,8 +120,6 @@ export class MakerProcessor {
     private async generateSnapshots(defindex: string | number): Promise<void> {
         const listings = await this.getAllListings(defindex);
         const time = this.getUnix();
-
-        console.log('Got all listings: ' + listings);
 
         const snapshots: {
             [sku: string]: SnapshotNamespace.Listing[];
