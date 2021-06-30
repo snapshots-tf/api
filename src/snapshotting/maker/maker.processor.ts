@@ -1,3 +1,4 @@
+import * as Currencies from 'tf2-currencies-lite';
 import axios from 'axios';
 import {
     stringify,
@@ -27,6 +28,7 @@ import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
 import { getImageFromSKU } from 'src/lib/images';
 import { UserDocument } from 'src/schemas/users.schema';
 import { promiseDelay } from 'src/lib/helpers';
+import { KeyPricesService } from '../keyprices.service';
 
 @Processor('maker')
 export class MakerProcessor {
@@ -39,14 +41,18 @@ export class MakerProcessor {
         private snapshotsModel: Model<SnapshotDocument>,
         @InjectModel('listings') private listingsModel: Model<ListingDocument>,
         @InjectModel('users') private usersModel: Model<UserDocument>,
-        private snapshotsGateway: SnapshotsGateway
+        private snapshotsGateway: SnapshotsGateway,
+        private keyPricesService: KeyPricesService
     ) {}
 
     @Process('snapshot')
     async handleSnapshot(
         job: Job<{ defindex: string | number }>
     ): Promise<void> {
-        if (process.env.DEV === 'true') return;
+        if (!this.keyPricesService.getKeyPrice()) {
+            this.logger.warn('No key price yet!');
+            throw new Error('No key price!');
+        }
 
         await this.generateSnapshots(job.data.defindex).catch((err) => {
             console.log(err);
@@ -122,6 +128,7 @@ export class MakerProcessor {
     private async generateSnapshots(defindex: string | number): Promise<void> {
         const listings = await this.getAllListings(defindex);
         const time = this.getUnix();
+        const keyPrice = this.keyPricesService.getKeyPrice();
 
         const snapshots: {
             [sku: string]: SnapshotNamespace.Listing[];
@@ -154,6 +161,31 @@ export class MakerProcessor {
 
             if (!snapshots[sku]) snapshots[sku] = [];
             snapshots[sku].push(snapshotListing);
+        }
+
+        for (const sku in snapshots) {
+            const listings = snapshots[sku];
+
+            // Descending
+            const buyListings = listings
+                .filter((listing) => listing.buying)
+                .sort((a, b) => {
+                    return (
+                        new Currencies(b.currencies).toValue(keyPrice.metal) -
+                        new Currencies(a.currencies).toValue(keyPrice.metal)
+                    );
+                });
+            // Ascending
+            const sellListings = listings
+                .filter((listing) => !listing.buying)
+                .sort((a, b) => {
+                    return (
+                        new Currencies(a.currencies).toValue(keyPrice.metal) -
+                        new Currencies(b.currencies).toValue(keyPrice.metal)
+                    );
+                });
+
+            snapshots[sku] = buyListings.concat(sellListings);
         }
 
         for (const sku in snapshots) {

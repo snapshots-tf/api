@@ -87,11 +87,9 @@ export class AppController {
             if (
                 skuName.toLowerCase().indexOf(query.toLowerCase()) !== -1 &&
                 matches.length < 10
-            ) {
+            )
                 matches.push({ name: skuName, sku: skus[i] });
-            }
-
-            if (skuName.toLowerCase() === query.toLowerCase()) {
+            else if (skuName.toLowerCase() === query.toLowerCase()) {
                 matches.push({ name: skuName, sku: skus[i] });
                 break;
             }

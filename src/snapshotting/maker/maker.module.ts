@@ -8,6 +8,7 @@ import { SnapshotSchema } from '../../schemas/snapshot.schema';
 import { ListingSchema } from '../../schemas/listing.schema';
 import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
 import { UserSchema } from 'src/schemas/users.schema';
+import { KeyPricesService } from '../keyprices.service';
 
 @Module({
     imports: [
@@ -30,6 +31,11 @@ import { UserSchema } from 'src/schemas/users.schema';
             },
         ]),
     ],
-    providers: [MakerProcessor, MakerService, SnapshotsGateway],
+    providers: [
+        MakerProcessor,
+        MakerService,
+        SnapshotsGateway,
+        KeyPricesService,
+    ],
 })
 export class MakerModule {}

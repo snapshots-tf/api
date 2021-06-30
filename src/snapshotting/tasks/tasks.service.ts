@@ -5,6 +5,7 @@ import { SKUAttributes } from 'tf2-item-format';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, Interval, Timeout } from '@nestjs/schedule';
 import { MakerService } from 'src/snapshotting/maker/maker.service';
+import { KeyPricesService } from '../keyprices.service';
 
 interface IGetPricesPrice {
     value: number;
@@ -32,7 +33,10 @@ interface IGetPricesItem {
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
 
-    constructor(private makerService: MakerService) {}
+    constructor(
+        private makerService: MakerService,
+        private keyPricesService: KeyPricesService
+    ) {}
 
     @Interval(28800 * 1000)
     async handleInterval() {
@@ -51,6 +55,12 @@ export class TasksService {
         });
 
         this.logger.debug('Done getting items!');
+    }
+
+    @Timeout(0)
+    @Interval(14400)
+    checkKeyPrices(): void {
+        this.keyPricesService.check().catch(() => null);
     }
 
     @Timeout(1000)
