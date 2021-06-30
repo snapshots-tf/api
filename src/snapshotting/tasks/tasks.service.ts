@@ -58,7 +58,7 @@ export class TasksService {
         this.handleInterval().catch(() => null);
     }
 
-    private async getAllItems(): Promise<string[]> {
+    private async getAllItems(): Promise<number[]> {
         const response = (await axios({
             method: 'GET',
             url: 'https://backpack.tf/api/IGetPrices/v4',
@@ -72,6 +72,15 @@ export class TasksService {
 
         const items = response.data.response.items;
 
+        let defindexes = [];
+
+        for (const name in items) {
+            defindexes = defindexes.concat(items[name].defindex);
+        }
+
+        return defindexes;
+
+        /*
         const skus = [];
 
         for (const name in items) {
@@ -114,5 +123,6 @@ export class TasksService {
         }
 
         return skus;
+        */
     }
 }
