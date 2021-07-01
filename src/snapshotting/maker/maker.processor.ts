@@ -54,6 +54,8 @@ export class MakerProcessor {
             throw new Error('No key price!');
         }
 
+        if (process.env.DEV === 'true') return;
+
         await this.generateSnapshots(job.data.defindex).catch((err) => {
             console.log(err);
         });
@@ -139,7 +141,20 @@ export class MakerProcessor {
         for (let i = 0; i < listings.length; i++) {
             const listing = listings[i];
 
-            const sku = toSKU(parseString(listing.item.name, true, true));
+            let sku;
+
+            try {
+                const sku = toSKU(parseString(listing.item.name, true, true));
+
+                const defindex = sku.split(';')[0];
+
+                if (defindex === 'undefined') {
+                    this.logger.warn('Failed to parse: ' + listing.item.name);
+                }
+            } catch (err) {
+                this.logger.warn('Failed to parse: ' + listing.item.name);
+                continue;
+            }
 
             const parsed = this.parseListing(listing);
 

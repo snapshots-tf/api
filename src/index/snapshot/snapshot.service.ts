@@ -15,7 +15,9 @@ export class SnapshotService {
         private readonly listingsModel: Model<ListingDocument>
     ) {}
 
-    async getByID(id: string): Promise<SnapshotNamespace.Snapshot | string> {
+    async getByID(
+        id: string
+    ): Promise<SnapshotNamespace.SnapshotWithListings | string> {
         if (!isValidObjectID(id)) return 'Invalid snapshot ID';
 
         return this.snapshotsModel.findOne({ _id: id }).then(async (res) => {
