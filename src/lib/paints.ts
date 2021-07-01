@@ -28,6 +28,7 @@ const PAINTS: { [key: number]: string } = {
     12091445: 'Cream Spirit',
     12377523: "A Mann's Mint",
     2960676: 'After Eight',
+    3874595: 'Balaclavas Are Forever',
 };
 
 export default PAINTS;
