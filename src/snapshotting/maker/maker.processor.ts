@@ -144,11 +144,11 @@ export class MakerProcessor {
             let sku;
 
             try {
-                const sku = toSKU(parseString(listing.item.name, true, true));
+                sku = toSKU(parseString(listing.item.name, true, true));
 
                 const defindex = sku.split(';')[0];
 
-                if (defindex === 'undefined') {
+                if (defindex === 'undefined' || sku === 'undefined') {
                     this.logger.warn('Failed to parse: ' + listing.item.name);
                 }
             } catch (err) {
