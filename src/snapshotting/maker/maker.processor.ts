@@ -96,7 +96,7 @@ export class MakerProcessor {
         const result = data.sell.listings.concat(data.buy.listings);
 
         if (shouldPaginateAgain) {
-            await promiseDelay(1000 - (end - start));
+            await promiseDelay(1100 - (end - start));
 
             return this.getAllListings(
                 defindex,
@@ -111,7 +111,7 @@ export class MakerProcessor {
         if (quality !== 15) {
             page = 0;
 
-            await promiseDelay(1000 - (end - start));
+            await promiseDelay(1100 - (end - start));
 
             if (qualitySkips[quality]) quality = qualitySkips[quality];
             else quality++;
