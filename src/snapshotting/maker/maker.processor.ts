@@ -248,13 +248,21 @@ export class MakerProcessor {
                 savedAt: time,
             }).save();
 
+            let name = '';
+
+            try {
+                name = stringify(parseSKU(sku));
+            } catch (err) {
+                this.logger.warn('Failed to stringify ' + sku);
+            }
+
             this.snapshotsGateway.emitMessage('snapshot', {
                 listings: {
                     buy: buyListings,
                     sell: snapshots[sku].length - buyListings,
                 },
                 sku,
-                name: stringify(parseSKU(sku)),
+                name: name,
                 id: doc._id,
                 image: getImageFromSKU(sku),
             });
