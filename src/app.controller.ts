@@ -82,7 +82,14 @@ export class AppController {
         let matches = [];
 
         for (let i = 0; i < skus.length; i++) {
-            const skuName = stringify(parseSKU(skus[i]));
+            let skuName;
+
+            try {
+                skuName = stringify(parseSKU(skus[i]));
+            } catch (err) {
+                console.log('Failed to stringify sku: ' + skus[i]);
+                continue;
+            }
 
             if (
                 skuName.toLowerCase().indexOf(query.toLowerCase()) !== -1 &&
