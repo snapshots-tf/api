@@ -77,7 +77,7 @@ export class MakerProcessor {
                 item: stringify(parseSKU(defindex + ';6')),
                 tradable: 1,
                 key: process.env.BPTF_API_KEY,
-                fold: 0,
+                fold: 1,
                 page_size: 30,
                 quality,
             },
