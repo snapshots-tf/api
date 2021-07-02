@@ -19,24 +19,26 @@ export async function returnListings(
     model: Model<ListingDocument>
 ): Promise<SnapshotNamespace.Listing[]> {
     // @ts-ignore
-    return model.find({ _id: { $in: ids } }).then((res) =>
-        res
-            .sort((a, b) => {
-                return ids.indexOf(a._id) - ids.indexOf(b._id);
-            })
-            .map((listing) => {
-                const obj = Object.assign(
-                    {
-                        id: listing._id,
-                        savedAt: listing.savedAt,
-                        lastSeen: listing.lastSeen,
-                    },
-                    listing.listing
-                );
+    return model.find({ _id: { $in: ids } }).then((res) => {
+        const results = ids.map(function (id) {
+            return res.find(function (document) {
+                return document._id.equals(id);
+            });
+        });
 
-                // @ts-ignore
-                delete obj.$init;
-                return obj;
-            })
-    );
+        return results.map((listing) => {
+            const obj = Object.assign(
+                {
+                    id: listing._id,
+                    savedAt: listing.savedAt,
+                    lastSeen: listing.lastSeen,
+                },
+                listing.listing
+            );
+
+            // @ts-ignore
+            delete obj.$init;
+            return obj;
+        });
+    });
 }
