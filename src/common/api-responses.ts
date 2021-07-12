@@ -14,6 +14,9 @@ export class GetStats {
 
     @ApiProperty({ title: 'Amount of snapshots we have.' })
     snapshots: number;
+
+    @ApiProperty({ title: 'Amount of users we have have.' })
+    users: number;
 }
 
 export class SnapshotListing {

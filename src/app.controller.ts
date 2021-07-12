@@ -115,11 +115,7 @@ export class AppController {
         type: GetStats,
     })
     @CacheTTL(900)
-    async stats(): Promise<{
-        snapshots: number;
-        listings: number;
-        users: number;
-    }> {
+    stats(): { listings: number; users: number; snapshots: number } {
         return this.statsService.getStats();
     }
 
