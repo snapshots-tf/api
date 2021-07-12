@@ -24,6 +24,7 @@ import { MeModule } from './users/me/me.module';
 import { ListingsService } from './index/listings/listings.service';
 import { UsersModule } from './index/users/users.module';
 import { StatsService } from './snapshotting/stats.service';
+import { UserSchema } from './schemas/users.schema';
 
 @Module({
     imports: [
@@ -69,6 +70,12 @@ import { StatsService } from './snapshotting/stats.service';
         ]),
         MongooseModule.forFeature([
             { name: 'listings', schema: ListingSchema },
+        ]),
+        MongooseModule.forFeature([
+            {
+                name: 'users',
+                schema: UserSchema,
+            },
         ]),
         BullModule.registerQueue({
             name: 'maker',
