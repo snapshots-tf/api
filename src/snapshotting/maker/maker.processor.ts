@@ -201,7 +201,6 @@ export class MakerProcessor {
                 });
 
             snapshots[sku] = buyListings.concat(sellListings);
-            console.log(sku + ': ' + JSON.stringify(snapshots[sku]));
         }
 
         for (const sku in snapshots) {
@@ -242,8 +241,6 @@ export class MakerProcessor {
                     ids.push(has._id);
                 }
             }
-
-            console.log(sku + ':´' + JSON.stringify(ids));
 
             const doc = await new this.snapshotsModel({
                 sku,
