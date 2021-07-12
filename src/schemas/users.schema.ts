@@ -24,6 +24,12 @@ export class User {
     }[];
 
     @Prop({ required: true })
+    savedAt: number;
+
+    @Prop({ required: true })
+    lastSeen: number;
+
+    @Prop({ required: true })
     suggestions: {
         time: number;
         created: number;

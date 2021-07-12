@@ -24,6 +24,7 @@ import { ListingsService } from './index/listings/listings.service';
 import { stringify, parseSKU } from 'tf2-item-format/static';
 import { getImageFromSKU } from './lib/images';
 import { BadRequestError } from 'passport-headerapikey';
+import { StatsService } from './snapshotting/stats.service';
 
 @ApiTags('index')
 @Controller('')
@@ -31,7 +32,8 @@ export class AppController {
     constructor(
         private snapshotsService: SnapshotsService,
         private listingsService: ListingsService,
-        private makerService: MakerService
+        private makerService: MakerService,
+        private statsService: StatsService
     ) {}
 
     @Get('/item-info/:sku')
@@ -113,11 +115,12 @@ export class AppController {
         type: GetStats,
     })
     @CacheTTL(900)
-    async stats(): Promise<{ snapshots: number; listings: number }> {
-        return {
-            snapshots: await this.snapshotsService.getSnapshotsCount(),
-            listings: await this.listingsService.getListingsCount(),
-        };
+    async stats(): Promise<{
+        snapshots: number;
+        listings: number;
+        users: number;
+    }> {
+        return this.statsService.getStats();
     }
 
     @Post('/request/:defindex')

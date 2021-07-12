@@ -201,6 +201,7 @@ export class MakerProcessor {
                 });
 
             snapshots[sku] = buyListings.concat(sellListings);
+            console.log(sku + ': ' + JSON.stringify(snapshots[sku]));
         }
 
         for (const sku in snapshots) {
@@ -241,6 +242,8 @@ export class MakerProcessor {
                     ids.push(has._id);
                 }
             }
+
+            console.log(sku + ':´' + JSON.stringify(ids));
 
             const doc = await new this.snapshotsModel({
                 sku,
@@ -327,6 +330,8 @@ export class MakerProcessor {
                     name: user.name,
                     avatar: user.avatar,
                     donations: [{ time, amount: donated }],
+                    lastSeen: this.getUnix(),
+                    savedAt: this.getUnix(),
                     suggestions: [
                         {
                             time,
@@ -353,6 +358,14 @@ export class MakerProcessor {
                 this.logger.debug(`Saved ${steamID64}!`);
             } else {
                 const toUpdate = {};
+
+                if (!has.savedAt && !has.lastSeen)
+                    toUpdate['$set'] = {
+                        savedAt: this.getUnix(),
+                        lastSeen: this.getUnix(),
+                    };
+
+                if (has.lastSeen) toUpdate['lastSeen'] = this.getUnix();
 
                 const { nonUnusualAccepted, unusualAccepted, created } =
                     has.suggestions[has.suggestions.length - 1];
