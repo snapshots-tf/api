@@ -109,12 +109,12 @@ export class AppController {
 
     @Get('/stats')
     @ApiOperation({
-        summary: 'Get API statistics. Cached for 900 seconds.',
+        summary: 'Get API statistics. Cached for 30 seconds.',
     })
     @ApiOkResponse({
         type: GetStats,
     })
-    @CacheTTL(900)
+    @CacheTTL(30)
     stats(): { listings: number; users: number; snapshots: number } {
         return this.statsService.getStats();
     }

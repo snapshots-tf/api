@@ -46,7 +46,7 @@ import { UserSchema } from './schemas/users.schema';
         }),
         MakerModule,
         ThrottlerModule.forRoot({
-            ttl: 60,
+            ttl: 120,
             limit: 60,
         }),
         MongooseModule.forRoot(process.env.MONGODB_STRING, {

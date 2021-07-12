@@ -40,15 +40,21 @@ export class StatsService {
     }
 
     async check(): Promise<void> {
-        cache.stats.listings = await this.listingsModel.countDocuments({
-            savedAt: { $gte: cache.cached },
-        });
-        cache.stats.snapshots = await this.snapshotsModel.countDocuments({
-            savedAt: { $gte: cache.cached },
-        });
-        cache.stats.users = await this.usersModel.countDocuments({
-            savedAt: { $gte: cache.cached },
-        });
+        cache.stats.listings =
+            cache.stats.listings +
+            (await this.listingsModel.countDocuments({
+                savedAt: { $gte: cache.cached },
+            }));
+        cache.stats.snapshots =
+            cache.stats.snapshots +
+            (await this.snapshotsModel.countDocuments({
+                savedAt: { $gte: cache.cached },
+            }));
+        cache.stats.users =
+            cache.stats.users +
+            (await this.usersModel.countDocuments({
+                savedAt: { $gte: cache.cached },
+            }));
         cache.cached = Math.round(new Date().getTime() / 1000);
     }
 }
