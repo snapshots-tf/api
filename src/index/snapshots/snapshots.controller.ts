@@ -18,7 +18,10 @@ export class SnapshotsController {
     async getSnapshots(
         @Param('sku') sku: string,
         @Query('snapshots', ParseIntPipe) snapshots?: number
-    ): Promise<{ sku: string; snapshots: SnapshotNamespace.Listing[] }> {
+    ): Promise<{
+        sku: string;
+        snapshots: SnapshotNamespace.SnapshotWithListings[];
+    }> {
         return {
             sku,
             snapshots: await this.snapshotsService.getSnapshots(

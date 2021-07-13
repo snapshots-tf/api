@@ -26,6 +26,35 @@ export class SnapshotsService {
     async getSnapshots(
         sku: string,
         amount: number
+    ): Promise<SnapshotNamespace.SnapshotWithListings[]> {
+        const res = await this.snapshotsModel
+            .find({ sku })
+            .sort('-savedAt')
+            .limit(amount > 10 ? 10 : amount);
+
+        const copies = [];
+
+        for (let i = 0; i < res.length; i++) {
+            const copy = {
+                ...res[i].toJSON(),
+            } as any;
+            delete copy.__v;
+            delete copy.sku;
+
+            copy.listings = await returnListings(
+                res[i].listings,
+                this.listingsModel
+            );
+
+            copies.push(copy);
+        }
+
+        return copies;
+    }
+
+    async getListings(
+        sku: string,
+        amount: number
     ): Promise<SnapshotNamespace.Listing[]> {
         const res = await this.snapshotsModel
             .find({ sku })
