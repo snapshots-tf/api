@@ -69,12 +69,22 @@ export class MakerProcessor {
     ): Promise<(BuyListing | SellListing)[]> {
         const start = new Date().getTime();
 
+        let name;
+
+        try {
+            name = stringify(parseSKU(defindex + ';6'));
+        } catch (err) {
+            this.logger.warn('Failed to parse: ' + (defindex + ';6'));
+        }
+
+        if (!name) throw new Error('Failed to parse defindex!');
+
         const { data } = (await axios({
             method: 'GET',
             url: 'https://backpack.tf/api/classifieds/search/v1',
             params: {
                 page,
-                item: stringify(parseSKU(defindex + ';6')),
+                item: name,
                 tradable: 1,
                 key: process.env.BPTF_API_KEY,
                 fold: 1,
@@ -414,8 +424,6 @@ export class MakerProcessor {
                 }
 
                 if (Object.keys(toUpdate).length !== 0) {
-                    this.logger.debug(JSON.stringify(toUpdate));
-
                     toUpdate['name'] = user.name;
                     toUpdate['avatar'] = user.avatar;
                     await this.usersModel.updateOne(
