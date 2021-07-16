@@ -1,15 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import * as cookieParser from 'cookie-parser';
 import * as helmet from 'helmet';
 import * as session from 'express-session';
 
 import customCss from './lib/customCss';
 
+const port = process.env.PORT || 3000;
+
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    app.enableCors();
+    app.enableCors({
+        origin: ['http://localhost:3000', 'https://snapshots.tf'],
+        credentials: true,
+    });
 
     const config = new DocumentBuilder()
         .setTitle('Snapshots.tf API')
@@ -35,6 +41,7 @@ async function bootstrap() {
                     useUnifiedTopology: true,
                 },
             }),
+            name: 'snapshots.tf',
             secret: ['Ic7n93JBY7vx', 'Tm33RN1WTTnM', 'u2Q8Q2jjJEPb'],
             resave: false,
             saveUninitialized: false,
@@ -42,8 +49,9 @@ async function bootstrap() {
     );
 
     app.use(helmet());
+    app.use(cookieParser(['Ic7n93JBY7vx', 'Tm33RN1WTTnM', 'u2Q8Q2jjJEPb']));
 
-    await app.listen(3000);
+    await app.listen(port);
 
     console.log(`Listening on ${await app.getUrl()}`);
 }

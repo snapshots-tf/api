@@ -10,13 +10,21 @@ export class MeService {
         private readonly apiUserModel: Model<ApiUserDocument>
     ) {}
 
-    async revokeApiKey(steamID64: string): Promise<void> {
+    async revokeAPIKey(steamID64: string): Promise<void> {
         return this.apiUserModel
             .updateOne({ steamID64 }, { key: null })
             .then(() => null);
     }
 
-    async getOrSetApiKey(steamID64: string): Promise<string> {
+    async getAPIKey(steamID64: string): Promise<string> {
+        const user = await this.apiUserModel.findOne({ steamID64 });
+
+        if (!user) throw new Error('Missing user!');
+
+        return user.key;
+    }
+
+    async setAPIKey(steamID64: string): Promise<string> {
         const user = await this.apiUserModel.findOne({ steamID64 });
 
         if (!user) throw new Error('Missing user!');
@@ -39,7 +47,7 @@ export class MeService {
 
     private generateApiKey(): string {
         let d = new Date().getTime();
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx-xxxxxx-xxxxx-xxxxx-yxyx'.replace(
             /[xy]/g,
             function (c) {
                 var r = (d + Math.random() * 16) % 16 | 0;

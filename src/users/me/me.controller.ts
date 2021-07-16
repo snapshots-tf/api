@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Req, Session, UseGuards } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Inject,
+    Post,
+    Req,
+    Session,
+    UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiUser } from 'src/schemas/api-user.schema';
 import { RequireAuthGuard } from '../auth/require-auth.guard';
@@ -11,17 +19,42 @@ export class MeController {
 
     @Get('/')
     @UseGuards(RequireAuthGuard)
-    getMe(
-        @Session() session: Record<string, { steamID64: string }>
+    public getMe(
+        @Session() session: Record<string, ApiUser>
     ): ApiUser | { noUser: true } {
-        return session.user;
+        const copy = { ...session.user };
+
+        delete copy.key;
+        return copy;
+    }
+
+    @Post('/api-key/create')
+    @UseGuards(RequireAuthGuard)
+    public async createAPIKey(
+        @Session() session: Record<string, ApiUser>
+    ): Promise<{
+        key: string;
+    }> {
+        return { key: await this.meService.setAPIKey(session.user.steamID64) };
+    }
+
+    @Post('/api-key/revoke')
+    @UseGuards(RequireAuthGuard)
+    public async revokeAPIKey(@Session() session: Record<string, ApiUser>) {
+        await this.meService.revokeAPIKey(session.user.steamID64);
+
+        return { revoked: true };
     }
 
     @Get('/api-key')
     @UseGuards(RequireAuthGuard)
-    getMyApiKeyGET(
-        @Session() session: Record<string, { steamID64: string }>
-    ): any {
-        return this.meService.getOrSetApiKey(session.user.steamID64);
+    public async getAPIKey(
+        @Session() session: Record<string, ApiUser>
+    ): Promise<{ key: string }> {
+        return {
+            key:
+                (await this.meService.getAPIKey(session.user.steamID64)) ||
+                null,
+        };
     }
 }

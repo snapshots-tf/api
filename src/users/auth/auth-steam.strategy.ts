@@ -17,7 +17,7 @@ export class SteamStrategy extends PassportStrategy(Strategy) {
     async validate(identifier: string): Promise<ApiUser> {
         const steamID64 = identifier.substr(37);
 
-        const user = await this.authService.setAndGetUser(steamID64);
+        const user = await this.authService.setUser(steamID64);
 
         return user;
     }

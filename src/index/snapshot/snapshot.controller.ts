@@ -7,7 +7,6 @@ import {
     Param,
 } from '@nestjs/common';
 import {
-    ApiBadRequestResponse,
     ApiOkResponse,
     ApiOperation,
     ApiResponse,

@@ -25,6 +25,7 @@ import { ListingsService } from './index/listings/listings.service';
 import { UsersModule } from './index/users/users.module';
 import { StatsService } from './snapshotting/stats.service';
 import { UserSchema } from './schemas/users.schema';
+import CustomHttpCacheInterceptor from './common/interceptors/CustomCache';
 
 @Module({
     imports: [
@@ -84,14 +85,14 @@ import { UserSchema } from './schemas/users.schema';
         UsersModule,
     ],
     providers: [
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: CacheInterceptor,
-        },
         SnapshotsService,
         MakerService,
         ListingsService,
         StatsService,
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: CustomHttpCacheInterceptor,
+        },
     ],
     controllers: [AppController],
 })

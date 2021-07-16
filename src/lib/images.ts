@@ -3,6 +3,12 @@ import { parseSKU } from 'tf2-item-format';
 
 const items = requireStatic('items') as SchemaItem[];
 
+export interface ItemImages {
+    large: string;
+    effect?: string;
+    small: string;
+}
+
 export function toHTTPS(original: string): string {
     return original.replace(
         'http://media.steampowered.com/apps/440/icons/',
@@ -12,10 +18,10 @@ export function toHTTPS(original: string): string {
 
 export function getEffectImage(effect: number): string {
     if (effect === 7) {
-        return `https://backpack.tf/images/440/particles/${effect}_380x380.png`;
+        return `/particles/${effect}_380x380.png`;
     }
 
-    return `https://backpack.tf/images/440/particles/${effect}_188x188.png`;
+    return `/particles/${effect}_188x188.png`;
 }
 
 export function getImageFromSKU(

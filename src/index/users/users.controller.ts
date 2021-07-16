@@ -28,7 +28,7 @@ export class UsersController {
     })
     @ApiQuery({
         name: 'steamIDS',
-        description: 'An array of steamids seperated by ,',
+        description: 'An array of steamids separated by ,',
     })
     public async getUsers(
         @Query(new ValidationPipe({ transform: true })) query: QueryUserDTO

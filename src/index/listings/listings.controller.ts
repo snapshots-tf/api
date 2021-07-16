@@ -1,6 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GetListing } from 'src/common/api-responses';
 import { ParseSteamIDPipe } from 'src/pipes/parse-steamid.pipe';
 import { ListingsService } from './listings.service';
 

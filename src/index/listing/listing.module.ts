@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { CacheInterceptor, Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ListingSchema } from 'src/schemas/listing.schema';
 import { ListingController } from './listing.controller';

@@ -3,6 +3,7 @@ import {
     CacheTTL,
     Controller,
     Get,
+    HttpException,
     HttpStatus,
     Param,
     Post,
@@ -22,7 +23,7 @@ import { MakerService } from './snapshotting/maker/maker.service';
 import { SnapshotsService } from './index/snapshots/snapshots.service';
 import { ListingsService } from './index/listings/listings.service';
 import { stringify, parseSKU } from 'tf2-item-format/static';
-import { getImageFromSKU } from './lib/images';
+import { getImageFromSKU, ItemImages } from './lib/images';
 import { BadRequestError } from 'passport-headerapikey';
 import { StatsService } from './snapshotting/stats.service';
 
@@ -81,7 +82,7 @@ export class AppController {
 
         const skus = await this.snapshotsService.getOverview();
 
-        let matches = [];
+        let matches: { sku: string; name: string; image: ItemImages }[] = [];
 
         for (let i = 0; i < skus.length; i++) {
             let skuName;
@@ -97,9 +98,17 @@ export class AppController {
                 skuName.toLowerCase().indexOf(query.toLowerCase()) !== -1 &&
                 matches.length < 10
             )
-                matches.push({ name: skuName, sku: skus[i] });
+                matches.push({
+                    name: skuName,
+                    sku: skus[i],
+                    image: getImageFromSKU(skus[i]),
+                });
             else if (skuName.toLowerCase() === query.toLowerCase()) {
-                matches.push({ name: skuName, sku: skus[i] });
+                matches.push({
+                    name: skuName,
+                    sku: skus[i],
+                    image: getImageFromSKU(skus[i]),
+                });
                 break;
             }
         }
@@ -133,12 +142,18 @@ export class AppController {
         @Param('defindex') defindex: string
     ): Promise<{ enqueued: boolean; expected: number }> {
         if (defindex.indexOf(';') !== -1)
-            throw new BadRequestError('Incorrect defindex.');
+            throw new HttpException(
+                'Invalid defindex!',
+                HttpStatus.BAD_REQUEST
+            );
 
         try {
             stringify(parseSKU(defindex + ';6'));
         } catch (err) {
-            throw new BadRequestError('Incorrect defindex.');
+            throw new HttpException(
+                'Invalid defindex!',
+                HttpStatus.BAD_REQUEST
+            );
         }
 
         try {

@@ -10,6 +10,12 @@ export class ApiUser {
 
     @Prop({ required: false })
     key?: string;
+
+    @Prop({ required: true })
+    avatar: string;
+
+    @Prop({ required: true })
+    name: string;
 }
 
 export const ApiUserSchema = SchemaFactory.createForClass(ApiUser);
