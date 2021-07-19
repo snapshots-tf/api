@@ -50,6 +50,10 @@ async function bootstrap() {
             secret: ['Ic7n93JBY7vx', 'Tm33RN1WTTnM', 'u2Q8Q2jjJEPb'],
             resave: false,
             saveUninitialized: false,
+            cookie: {
+                secure: process.env.NODE_ENV === 'true',
+                maxAge: 1209600000,
+            },
         })
     );
 
