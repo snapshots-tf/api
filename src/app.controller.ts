@@ -8,6 +8,8 @@ import {
     Param,
     Post,
     UseGuards,
+    Query,
+    ParseIntPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -169,6 +171,25 @@ export class AppController {
                 error: 'We already have 5 or more of that item in our queue.',
             });
         }
+    }
+
+    @Get('/overview/human')
+    @ApiOperation({
+        summary:
+            'Return an array of items we have records on, please use /overview instead if you dont need the data.',
+    })
+    async getHumanOverview(
+        @Query('skip', ParseIntPipe) skip?: number
+    ): Promise<{
+        items: { image: ItemImages; sku: string; name: string }[];
+        cursor: { skip: number };
+    }> {
+        return {
+            items: await this.snapshotsService.getHumanReadableOverview(skip),
+            cursor: {
+                skip,
+            },
+        };
     }
 
     @Get('/overview')
