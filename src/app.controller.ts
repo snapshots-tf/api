@@ -19,8 +19,6 @@ import {
     ApiOperation,
     ApiTags,
 } from '@nestjs/swagger';
-import * as Fuse from 'fuse.js';
-
 import { GetSnapshotsOverview, GetStats } from './common/api-responses';
 import { testSKU } from './lib/skus';
 import { MakerService } from './snapshotting/maker/maker.service';
@@ -84,28 +82,40 @@ export class AppController {
             }
         }
 
-        const items = await (
-            await this.snapshotsService.getOverview()
-        )
-            .map((item) => {
-                try {
-                    return {
-                        name: stringify(parseSKU(item)),
-                        sku: item,
-                        image: getImageFromSKU(item),
-                    };
-                } catch (err) {
-                    return null;
-                }
-            })
-            .filter((res) => res !== null);
+        const skus = await this.snapshotsService.getOverview();
 
-        return {
-            // @ts-ignore
-            results: new Fuse(items, { keys: ['name'] }).search(query, {
-                limit: 10,
-            }),
-        };
+        let matches: { sku: string; name: string; image: ItemImages }[] = [];
+
+        for (let i = 0; i < skus.length; i++) {
+            let skuName;
+
+            try {
+                skuName = stringify(parseSKU(skus[i]));
+            } catch (err) {
+                console.log('Failed to stringify sku: ' + skus[i]);
+                continue;
+            }
+
+            if (
+                skuName.toLowerCase().indexOf(query.toLowerCase()) !== -1 &&
+                matches.length < 10
+            )
+                matches.push({
+                    name: skuName,
+                    sku: skus[i],
+                    image: getImageFromSKU(skus[i]),
+                });
+            else if (skuName.toLowerCase() === query.toLowerCase()) {
+                matches.push({
+                    name: skuName,
+                    sku: skus[i],
+                    image: getImageFromSKU(skus[i]),
+                });
+                break;
+            }
+        }
+
+        return { results: matches };
     }
 
     @Get('/stats')
