@@ -48,6 +48,17 @@ export function getImageFromSKU(
             large: `https://scrap.tf/img/items/440/${found.defindex}-gold.png`,
             effect: null,
         };
+    } else if (parsed.wear) {
+        const scrapTFImage = `https://scrap.tf/img/items/warpaint/${encodeURIComponent(
+            parsed.defindex
+        )}_${parsed.texture}_${parsed.wear}_${
+            parsed.festivized === true ? 1 : 0
+        }.png`;
+        return {
+            small: scrapTFImage,
+            large: scrapTFImage,
+            effect: parsed.effect ? getEffectImage(parsed.effect) : null,
+        };
     }
 
     return {
