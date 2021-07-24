@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 
 @Injectable()
 export class ApiKeyAuthStrategy extends PassportStrategy(Strategy, 'api-key') {
-    private readonly logger = new Logger('ApiKeyAuthStrategy');
+    private readonly logger = new Logger(ApiKeyAuthStrategy.name);
 
     constructor(private readonly authService: AuthService) {
         super(
