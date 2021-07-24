@@ -9,7 +9,7 @@ export class ApiKeyAuthStrategy extends PassportStrategy(Strategy, 'api-key') {
 
     constructor(private readonly authService: AuthService) {
         super(
-            { header: 'SNAPSHOT_KEY', prefix: '' },
+            { header: 'X-SNAPSHOT-KEY', prefix: '' },
             true,
             async (key: string, done) => {
                 return this.validate(key, done);
@@ -18,12 +18,12 @@ export class ApiKeyAuthStrategy extends PassportStrategy(Strategy, 'api-key') {
     }
 
     public validate = (key: string, done: (error: Error, data: any) => {}) => {
-        this.logger.debug('Validating ' + key);
+        this.logger.log('Validating ' + key);
 
         this.authService
             .findByApiKey(key)
             .then((result) => {
-                this.logger.debug('Result: ' + result);
+                this.logger.log('Result: ' + result);
 
                 if (result === true) {
                     done(null, true);
@@ -32,7 +32,7 @@ export class ApiKeyAuthStrategy extends PassportStrategy(Strategy, 'api-key') {
                 done(new UnauthorizedException(), null);
             })
             .catch((err) => {
-                this.logger.error('Failed:', err);
+                this.logger.log('Failed:', err);
 
                 done(new UnauthorizedException(), null);
             });
