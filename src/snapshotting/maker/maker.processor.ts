@@ -432,7 +432,6 @@ export class MakerProcessor {
                         },
                         toUpdate
                     );
-                    this.logger.debug(`Updated ${steamID64}!`);
                 }
             }
         }
