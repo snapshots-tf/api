@@ -136,7 +136,7 @@ export class AppController {
     })
     @UseGuards(AuthGuard('api-key'))
     @ApiHeader({
-        name: 'SNAPSHOT_KEY',
+        name: 'X-SNAPSHOT-KEY',
         description:
             "This key is required for this endpoint to work, get it by first going to /auth/steam then /me/api-key. It's bound to the account you sign in with.",
     })
