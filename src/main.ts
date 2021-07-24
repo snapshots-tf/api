@@ -23,7 +23,7 @@ async function bootstrap() {
             if (allowedCorsDomains.indexOf(origin) !== -1) {
                 callback(null, true);
             } else {
-                callback(new Error('Not cors friendly!'));
+                callback(null, false);
             }
         },
         methods: ['GET', 'PUT', 'POST'],
