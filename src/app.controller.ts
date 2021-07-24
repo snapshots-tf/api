@@ -10,6 +10,7 @@ import {
     UseGuards,
     Query,
     ParseIntPipe,
+    Header,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -140,6 +141,8 @@ export class AppController {
         description:
             "This key is required for this endpoint to work, get it by first going to /auth/steam then /me/api-key. It's bound to the account you sign in with.",
     })
+    @Header('Access-Control-Allow-Credentials', 'false')
+    @Header('Access-Control-Allow-Origin', '*')
     async request(
         @Param('defindex') defindex: string
     ): Promise<{ enqueued: boolean; expected: number }> {
