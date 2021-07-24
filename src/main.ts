@@ -18,18 +18,6 @@ const allowedCorsDomains = [
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    app.enableCors({
-        origin: (origin, callback) => {
-            if (allowedCorsDomains.indexOf(origin) !== -1) {
-                callback(null, true);
-            } else {
-                callback(null, false);
-            }
-        },
-        methods: ['GET', 'PUT', 'POST'],
-        credentials: true,
-    });
-
     const config = new DocumentBuilder()
         .setTitle('Snapshots.tf API')
         .setDescription(
@@ -67,6 +55,18 @@ async function bootstrap() {
 
     app.use(helmet());
     app.use(cookieParser(['Ic7n93JBY7vx', 'Tm33RN1WTTnM', 'u2Q8Q2jjJEPb']));
+
+    app.enableCors({
+        origin: (origin, callback) => {
+            if (allowedCorsDomains.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(null, false);
+            }
+        },
+        methods: ['GET', 'PUT', 'POST'],
+        credentials: true,
+    });
 
     await app.listen(port);
 
