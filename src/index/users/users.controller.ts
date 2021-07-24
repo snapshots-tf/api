@@ -8,9 +8,16 @@ import {
     Query,
     ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+    ApiExcludeEndpoint,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
+} from '@nestjs/swagger';
+import { LeanDocument } from 'mongoose';
 import { QueryUserDTO } from 'src/common/dtos/QueryUser.dto';
 import { ParseSteamIDPipe } from 'src/pipes/parse-steamid.pipe';
+import { UserDocument } from 'src/schemas/users.schema';
 import { SnapshotService } from '../snapshot/snapshot.service';
 import { UsersService } from './users.service';
 
@@ -21,6 +28,16 @@ export class UsersController {
         private readonly usersService: UsersService,
         private readonly snapshotService: SnapshotService
     ) {}
+
+    @Get('/search/:query')
+    @ApiExcludeEndpoint()
+    public async searchUser(
+        @Param('query') query: string
+    ): Promise<{ users: UserDocument[] | LeanDocument<UserDocument>[] }> {
+        return {
+            users: await this.usersService.searchUsers(query),
+        };
+    }
 
     @Get('/')
     @ApiOperation({
