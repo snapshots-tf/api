@@ -44,10 +44,11 @@ export class AuthService {
     }
 
     findByApiKey(key: string): Promise<boolean> {
-        return this.apiUserModel
-            .findOne({ key })
-            .lean()
-            .then((res) => !!res);
+        return this.apiUserModel.findOne({ key }).then((res) => {
+            console.log(key, res);
+
+            return !!res;
+        });
     }
 
     private getSteamUserData(
