@@ -9,11 +9,23 @@ import customCss from './lib/customCss';
 
 const port = process.env.PORT || 3000;
 
+const allowedCorsDomains = [
+    'https://snapshots.tf',
+    'http://snapshots.tf',
+    'http://localhost:3000',
+];
+
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     app.enableCors({
-        origin: '*',
+        origin: (origin, callback) => {
+            if (allowedCorsDomains.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not cors friendly!'));
+            }
+        },
         methods: ['GET', 'PUT', 'POST'],
         credentials: true,
     });
