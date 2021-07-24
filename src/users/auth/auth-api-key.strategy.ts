@@ -5,10 +5,7 @@ import { AuthService } from './auth.service';
 
 @Injectable()
 export class ApiKeyAuthStrategy extends PassportStrategy(Strategy, 'api-key') {
-    constructor(
-        private readonly authService: AuthService,
-        private readonly logger: Logger
-    ) {
+    constructor(private readonly authService: AuthService) {
         super(
             { header: 'SNAPSHOT_KEY', prefix: '' },
             true,
@@ -19,16 +16,11 @@ export class ApiKeyAuthStrategy extends PassportStrategy(Strategy, 'api-key') {
     }
 
     public validate = (key: string, done: (error: Error, data: any) => {}) => {
-        this.logger.log('Validating api-key ', JSON.stringify({ key }));
         console.log('', { key });
 
         this.authService
             .findByApiKey(key)
             .then((result) => {
-                this.logger.log(
-                    'Done validating api-key',
-                    JSON.stringify({ result })
-                );
                 console.log('', { result });
 
                 if (result === true) {
