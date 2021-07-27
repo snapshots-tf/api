@@ -21,7 +21,7 @@ async function bootstrap() {
     const config = new DocumentBuilder()
         .setTitle('Snapshots.tf API')
         .setDescription(
-            "Rate limit is 60 requests / minute. By default snapshots.tf enqueues a few thousand items every so often, these items are gathered from backpack.tf's api, this means that we only enqueue items that have a price on backpack.tf, feel free to enqueue items yourself. WARPAINT SUPPORT IS NOT ADDED YET! All GET endpoints are cached for 15 seconds."
+            "Rate limit is 120 requests / minute. By default snapshots.tf enqueues a few thousand items every so often, these items are gathered from backpack.tf's api, this means that we only enqueue items that have a price on backpack.tf, feel free to enqueue items yourself."
         )
         .setVersion('0.0.1')
         .setExternalDoc('Main Site', 'https://snapshots.tf')
