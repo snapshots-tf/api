@@ -8,7 +8,14 @@ import {
 } from 'tf2-item-format/static';
 import { requireStatic, SchemaEnum } from 'tf2-static-schema';
 
-import { Process, Processor } from '@nestjs/bull';
+import {
+    OnQueueCompleted,
+    OnQueueDrained,
+    OnQueueError,
+    OnQueueProgress,
+    Process,
+    Processor,
+} from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import {
     SearchListingResponse,
@@ -19,14 +26,14 @@ import { SnapshotNamespace } from 'src/common/namespaces';
 import { fillCurrency } from 'src/lib/currency';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { SnapshotDocument } from 'src/schemas/snapshot.schema';
-import { ListingDocument } from 'src/schemas/listing.schema';
+import { SnapshotDocument } from 'src/lib/schemas/snapshot.schema';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
 import { Job } from 'bull';
 import SPELLS from 'src/lib/spells';
 import PAINTS from 'src/lib/paints';
-import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
+import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
 import { getImageFromSKU } from 'src/lib/images';
-import { UserDocument } from 'src/schemas/users.schema';
+import { UserDocument } from 'src/lib/schemas/users.schema';
 import { promiseDelay } from 'src/lib/helpers';
 import { KeyPricesService } from '../keyprices.service';
 

@@ -1,8 +1,8 @@
 import * as redisStore from 'cache-manager-redis-store';
 import { CacheInterceptor, CacheModule, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { SnapshotsModule } from './index/snapshots/snapshots.module';
-import { ListingsModule } from './index/listings/listings.module';
+import { SnapshotsModule } from './routes/snapshots/snapshots.module';
+import { ListingsModule } from './routes/listings/listings.module';
 
 import { BullModule } from '@nestjs/bull';
 
@@ -11,20 +11,20 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TasksModule } from './snapshotting/tasks/tasks.module';
 import { QueueModule } from './snapshotting/queue/queue.module';
-import { SnapshotModule } from './index/snapshot/snapshot.module';
+import { SnapshotModule } from './routes/snapshot/snapshot.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { AuthModule } from './users/auth/auth.module';
-import { ListingModule } from './index/listing/listing.module';
+import { AuthModule } from './routes/auth/auth.module';
+import { ListingModule } from './routes/listing/listing.module';
 import { AppController } from './app.controller';
-import { SnapshotsService } from './index/snapshots/snapshots.service';
-import { ListingSchema } from './schemas/listing.schema';
-import { SnapshotSchema } from './schemas/snapshot.schema';
+import { SnapshotsService } from './routes/snapshots/snapshots.service';
+import { ListingSchema } from './lib/schemas/listing.schema';
+import { SnapshotSchema } from './lib/schemas/snapshot.schema';
 import { MakerService } from './snapshotting/maker/maker.service';
-import { MeModule } from './users/me/me.module';
-import { ListingsService } from './index/listings/listings.service';
-import { UsersModule } from './index/users/users.module';
+import { MeModule } from './routes/me/me.module';
+import { ListingsService } from './routes/listings/listings.service';
+import { UsersModule } from './routes/users/users.module';
 import { StatsService } from './snapshotting/stats.service';
-import { UserSchema } from './schemas/users.schema';
+import { UserSchema } from './lib/schemas/users.schema';
 import CustomHttpCacheInterceptor from './common/interceptors/CustomCache';
 
 @Module({
@@ -43,6 +43,12 @@ import CustomHttpCacheInterceptor from './common/interceptors/CustomCache';
             limiter: {
                 max: 1,
                 duration: 1000,
+                bounceBack: true,
+            },
+            defaultJobOptions: {
+                attempts: 1,
+                removeOnComplete: true,
+                removeOnFail: true,
             },
         }),
         MakerModule,

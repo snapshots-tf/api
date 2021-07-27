@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ListingSchema } from '../../schemas/listing.schema';
-import { SnapshotSchema } from 'src/schemas/snapshot.schema';
+import { ListingSchema } from '../../lib/schemas/listing.schema';
+import { SnapshotSchema } from 'src/lib/schemas/snapshot.schema';
 import { SnapshotsController } from './snapshots.controller';
 import { SnapshotsService } from './snapshots.service';
 import { SnapshotsGateway } from './snapshots.gateway';

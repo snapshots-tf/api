@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SnapshotNamespace } from 'src/common/namespaces';
-import { ListingDocument } from 'src/schemas/listing.schema';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
 
 @Injectable()
 export class ListingsService {

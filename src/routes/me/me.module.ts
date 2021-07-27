@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ApiUserSchema } from 'src/schemas/api-user.schema';
+import { ApiUserSchema } from 'src/lib/schemas/api-user.schema';
 import { MeController } from './me.controller';
 import { MeService } from './me.service';
 

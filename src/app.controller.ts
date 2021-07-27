@@ -23,8 +23,8 @@ import {
 import { GetSnapshotsOverview, GetStats } from './common/api-responses';
 import { testSKU } from './lib/skus';
 import { MakerService } from './snapshotting/maker/maker.service';
-import { SnapshotsService } from './index/snapshots/snapshots.service';
-import { ListingsService } from './index/listings/listings.service';
+import { SnapshotsService } from './routes/snapshots/snapshots.service';
+import { ListingsService } from './routes/listings/listings.service';
 import { stringify, parseSKU } from 'tf2-item-format/static';
 import { getImageFromSKU, ItemImages } from './lib/images';
 import { BadRequestError } from 'passport-headerapikey';
@@ -141,8 +141,6 @@ export class AppController {
         description:
             "This key is required for this endpoint to work, get it by first going to /auth/steam then /me/api-key. It's bound to the account you sign in with.",
     })
-    @Header('Access-Control-Allow-Credentials', 'false')
-    @Header('Access-Control-Allow-Origin', '*')
     async request(
         @Param('defindex') defindex: string
     ): Promise<{ enqueued: boolean; expected: number }> {

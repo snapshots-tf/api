@@ -16,8 +16,8 @@ import {
 } from '@nestjs/swagger';
 import { LeanDocument } from 'mongoose';
 import { QueryUserDTO } from 'src/common/dtos/QueryUser.dto';
-import { ParseSteamIDPipe } from 'src/pipes/parse-steamid.pipe';
-import { UserDocument } from 'src/schemas/users.schema';
+import { ParseSteamIDPipe } from 'src/lib/pipes/parse-steamid.pipe';
+import { UserDocument } from 'src/lib/schemas/users.schema';
 import { SnapshotService } from '../snapshot/snapshot.service';
 import { UsersService } from './users.service';
 

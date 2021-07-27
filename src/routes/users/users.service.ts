@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model } from 'mongoose';
-import { UserDocument } from 'src/schemas/users.schema';
+import { UserDocument } from 'src/lib/schemas/users.schema';
 
 @Injectable()
 export class UsersService {

@@ -1,6 +1,6 @@
 import { Model, Types } from 'mongoose';
 import { SnapshotNamespace } from 'src/common/namespaces';
-import { ListingDocument } from 'src/schemas/listing.schema';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
 
 export function isValidObjectID(id: string): boolean {
     return Types.ObjectId.isValid(id);

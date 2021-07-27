@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ApiUserSchema } from 'src/schemas/api-user.schema';
+import { ApiUserSchema } from 'src/lib/schemas/api-user.schema';
 import { ApiKeyAuthStrategy } from './auth-api-key.strategy';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';

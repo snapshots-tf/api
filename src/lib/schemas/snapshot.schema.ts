@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 
-import { SnapshotNamespace } from '../common/namespaces/index';
+import { SnapshotNamespace } from '../../common/namespaces/index';
 
 export type SnapshotDocument = Snapshot & mongoose.Document;
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model } from 'mongoose';
-import { ListingDocument } from 'src/schemas/listing.schema';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
 import { isValidObjectID } from 'src/lib/helpers';
 
 @Injectable()

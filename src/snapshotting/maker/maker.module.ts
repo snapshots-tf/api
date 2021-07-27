@@ -4,10 +4,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MakerProcessor } from './maker.processor';
 import { MakerService } from './maker.service';
 
-import { SnapshotSchema } from '../../schemas/snapshot.schema';
-import { ListingSchema } from '../../schemas/listing.schema';
-import { SnapshotsGateway } from 'src/index/snapshots/snapshots.gateway';
-import { UserSchema } from 'src/schemas/users.schema';
+import { SnapshotSchema } from '../../lib/schemas/snapshot.schema';
+import { ListingSchema } from '../../lib/schemas/listing.schema';
+import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
+import { UserSchema } from 'src/lib/schemas/users.schema';
 import { KeyPricesService } from '../keyprices.service';
 
 @Module({

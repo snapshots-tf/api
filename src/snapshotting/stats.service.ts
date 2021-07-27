@@ -3,10 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
 import { Model } from 'mongoose';
-import { ListingsModule } from 'src/index/listings/listings.module';
-import { ListingDocument } from 'src/schemas/listing.schema';
-import { SnapshotDocument } from 'src/schemas/snapshot.schema';
-import { UserDocument } from 'src/schemas/users.schema';
+import { ListingsModule } from 'src/routes/listings/listings.module';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
+import { SnapshotDocument } from 'src/lib/schemas/snapshot.schema';
+import { UserDocument } from 'src/lib/schemas/users.schema';
 import * as Currencies from 'tf2-currencies-lite';
 
 interface Statistic {

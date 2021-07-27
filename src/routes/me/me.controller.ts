@@ -8,7 +8,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiUser } from 'src/schemas/api-user.schema';
+import { ApiUser } from 'src/lib/schemas/api-user.schema';
 import { RequireAuthGuard } from '../auth/require-auth.guard';
 import { MeService } from './me.service';
 

@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SnapshotNamespace } from 'src/common/namespaces';
 import { isValidObjectID, returnListings } from 'src/lib/helpers';
-import { ListingDocument } from 'src/schemas/listing.schema';
-import { SnapshotDocument } from 'src/schemas/snapshot.schema';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
+import { SnapshotDocument } from 'src/lib/schemas/snapshot.schema';
 
 @Injectable()
 export class SnapshotService {

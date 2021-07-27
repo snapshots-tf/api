@@ -3,9 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { stringify, parseSKU } from 'tf2-item-format/static';
 
-import { SnapshotDocument } from 'src/schemas/snapshot.schema';
+import { SnapshotDocument } from 'src/lib/schemas/snapshot.schema';
 import { SnapshotNamespace } from 'src/common/namespaces/index';
-import { ListingDocument } from 'src/schemas/listing.schema';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
 import { returnListings } from 'src/lib/helpers';
 import { getImageFromSKU, ItemImages } from 'src/lib/images';
 

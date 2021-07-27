@@ -2,8 +2,8 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MakerService } from 'src/snapshotting/maker/maker.service';
-import { ListingSchema } from 'src/schemas/listing.schema';
-import { SnapshotSchema } from 'src/schemas/snapshot.schema';
+import { ListingSchema } from 'src/lib/schemas/listing.schema';
+import { SnapshotSchema } from 'src/lib/schemas/snapshot.schema';
 import { SnapshotController } from './snapshot.controller';
 import { SnapshotService } from './snapshot.service';
 

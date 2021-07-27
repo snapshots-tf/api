@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ApiUserDocument } from 'src/schemas/api-user.schema';
+import { ApiUserDocument } from 'src/lib/schemas/api-user.schema';
 
 @Injectable()
 export class MeService {
