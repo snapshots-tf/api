@@ -29,8 +29,6 @@ export class SnapshotsService {
     async getHumanReadableOverview(
         skip: number
     ): Promise<{ image: ItemImages; sku: string; name: string }[]> {
-        console.log('request');
-
         const overview = (await this.getOverview()).slice(skip, skip + 100);
 
         return overview.map((value) => {
@@ -40,6 +38,34 @@ export class SnapshotsService {
                 name: stringify(parseSKU(value)),
             };
         });
+    }
+
+    async getSnapshotsByIDS(
+        ids: string[]
+    ): Promise<SnapshotNamespace.SnapshotWithListings[]> {
+        return this.snapshotsModel
+            .find({ _id: { $in: ids } })
+            .limit(5)
+            .then(async (res) => {
+                const copies = [];
+
+                for (let i = 0; i < res.length; i++) {
+                    const copy = {
+                        ...res[i].toJSON(),
+                    } as any;
+                    delete copy.__v;
+                    delete copy.sku;
+
+                    copy.listings = await returnListings(
+                        res[i].listings,
+                        this.listingsModel
+                    );
+
+                    copies.push(copy);
+                }
+
+                return copies;
+            });
     }
 
     async getSnapshots(
