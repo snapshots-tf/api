@@ -1,6 +1,19 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+    Controller,
+    Get,
+    Param,
+    ParseIntPipe,
+    Query,
+    ValidationPipe,
+} from '@nestjs/common';
+import {
+    ApiOkResponse,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
+} from '@nestjs/swagger';
 import { GetSnapshotOverview } from 'src/common/api-responses';
+import { QuerySnapshotsByIDS } from 'src/common/dtos/GetSnapshotsByIDS.dto';
 import { SnapshotNamespace } from 'src/common/namespaces';
 import { stringify, parseSKU } from 'tf2-item-format/static';
 import { SnapshotsService } from './snapshots.service';
@@ -10,12 +23,29 @@ import { SnapshotsService } from './snapshots.service';
 export class SnapshotsController {
     constructor(private snapshotsService: SnapshotsService) {}
 
+    @Get('/ids/')
+    @ApiOperation({
+        summary: 'Get a list of snapshots by ID (limited to 5).',
+    })
+    @ApiQuery({
+        name: 'ids',
+        description: 'An array of ids separated by ,',
+    })
+    public async getSnapshotsByIDS(
+        @Query(new ValidationPipe({ transform: true }))
+        query: QuerySnapshotsByIDS
+    ): Promise<{ snapshots: SnapshotNamespace.SnapshotWithListings[] }> {
+        return {
+            snapshots: await this.snapshotsService.getSnapshotsByIDS(query.ids),
+        };
+    }
+
     @Get('/sku/:sku')
     @ApiOperation({
         summary:
             'Get x (limited to 10) amount of snapshots (defined by "snapshots" query) in one request. A convenience method.',
     })
-    async getSnapshots(
+    public async getSnapshotsBySKU(
         @Param('sku') sku: string,
         @Query('snapshots', ParseIntPipe) snapshots?: number
     ): Promise<{
@@ -39,7 +69,7 @@ export class SnapshotsController {
     @ApiOkResponse({
         type: GetSnapshotOverview,
     })
-    async getSnapshotsOverview(@Param('sku') sku: string): Promise<{
+    public async getSnapshotsOverview(@Param('sku') sku: string): Promise<{
         sku: string;
         name: string;
         overview: { id: string; savedAt: number; listingsAmount: number }[];

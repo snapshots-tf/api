@@ -7,7 +7,11 @@ export default class CustomHttpCacheInterceptor extends CacheInterceptor {
         const request = context.switchToHttp().getRequest();
         const isGetRequest = request.method === 'GET';
         const requestURl = request.path;
-        const excludePaths = ['/me/api-key', '/overview/human'];
+        const excludePaths = [
+            '/me/api-key',
+            '/overview/human',
+            '/snapshots/ids',
+        ];
 
         if (
             !isGetRequest ||
