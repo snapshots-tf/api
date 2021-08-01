@@ -84,7 +84,7 @@ export class MakerProcessor {
             this.logger.warn('Failed to parse: ' + (defindex + ';6'));
         }
 
-        if (!name) throw new Error('Failed to parse defindex!');
+        if (!name) return null;
 
         const { data } = (await axios({
             method: 'GET',
@@ -146,6 +146,8 @@ export class MakerProcessor {
 
     private async generateSnapshots(defindex: string | number): Promise<void> {
         const listings = await this.getAllListings(defindex);
+
+        if (!listings) return;
         const time = this.getUnix();
         const keyPrice = this.keyPricesService.getKeyPrice();
 
