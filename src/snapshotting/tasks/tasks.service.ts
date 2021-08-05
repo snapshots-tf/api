@@ -88,7 +88,10 @@ export class TasksService {
 
         for (const name in items) {
             for (let i = 0; i < items[name].defindex.length; i++) {
-                if (!defindexes.includes(items[name].defindex[i])) {
+                if (
+                    !defindexes.includes(items[name].defindex[i]) &&
+                    items[name].defindex[i] !== 16007
+                ) {
                     defindexes.push(items[name].defindex[i]);
                 }
             }
