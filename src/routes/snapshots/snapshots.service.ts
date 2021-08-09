@@ -118,20 +118,35 @@ export class SnapshotsService {
     }
 
     async getSnapshotsOverview(
-        sku: string
-    ): Promise<{ id: string; savedAt: number; listingsAmount: number }[]> {
+        sku: string,
+        query?: any,
+        sort?: '-savedAt' | '+savedAt'
+    ): Promise<
+        { id: string; savedAt: number; listingsAmount: number; sku?: string }[]
+    > {
+        let mongoQuery = { sku };
+
+        if (query) {
+            mongoQuery = query;
+        }
+
         return this.snapshotsModel
-            .find({ sku })
-            .sort('-savedAt')
+            .find(mongoQuery)
+            .sort(!sort ? '-savedAt' : sort)
             .lean()
-            .limit(2000)
+            .limit(4000)
             .then((res) =>
                 res.map((res) => {
-                    return {
+                    const obj: any = {
                         id: res._id,
                         savedAt: res.savedAt,
                         listingsAmount: res.listings.length,
                     };
+
+                    if (!sort) return obj;
+
+                    obj.sku = res.sku;
+                    return obj;
                 })
             );
     }

@@ -11,12 +11,14 @@ export default class CustomHttpCacheInterceptor extends CacheInterceptor {
             '/me/api-key',
             '/overview/human',
             '/snapshots/ids',
+            '/snapshots/overview/query',
         ];
 
         if (
             !isGetRequest ||
             (isGetRequest &&
-                excludePaths.some((url) => requestURl.indexOf(url) !== -1))
+                excludePaths.some((url) => requestURl.indexOf(url) !== -1)) ||
+            (isGetRequest && requestURl.indexOf('?') !== -1)
         ) {
             return undefined;
         }
