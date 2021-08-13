@@ -1,40 +1,28 @@
-import * as Currencies from 'tf2-currencies-lite';
+import { Process, Processor } from '@nestjs/bull';
+import { Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
+import { Job } from 'bull';
+import { Model } from 'mongoose';
+import { SnapshotNamespace } from 'src/common/namespaces';
+import { BuyListing, SellListing } from 'src/common/types/bptf';
+import { fillCurrency } from 'src/lib/currency';
+import { promiseDelay } from 'src/lib/helpers';
+import { getImageFromSKU } from 'src/lib/images';
+import PAINTS from 'src/lib/paints';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
+import { SnapshotDocument } from 'src/lib/schemas/snapshot.schema';
+import { UserDocument } from 'src/lib/schemas/users.schema';
+import SPELLS from 'src/lib/spells';
+import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
+import * as Currencies from 'tf2-currencies-lite';
 import {
-    stringify,
     parseSKU,
     parseString,
+    stringify,
     toSKU,
 } from 'tf2-item-format/static';
 import { requireStatic, SchemaEnum } from 'tf2-static-schema';
-
-import {
-    OnQueueCompleted,
-    OnQueueDrained,
-    OnQueueError,
-    OnQueueProgress,
-    Process,
-    Processor,
-} from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
-import {
-    SearchListingResponse,
-    SellListing,
-    BuyListing,
-} from 'src/common/types/bptf';
-import { SnapshotNamespace } from 'src/common/namespaces';
-import { fillCurrency } from 'src/lib/currency';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { SnapshotDocument } from 'src/lib/schemas/snapshot.schema';
-import { ListingDocument } from 'src/lib/schemas/listing.schema';
-import { Job } from 'bull';
-import SPELLS from 'src/lib/spells';
-import PAINTS from 'src/lib/paints';
-import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
-import { getImageFromSKU } from 'src/lib/images';
-import { UserDocument } from 'src/lib/schemas/users.schema';
-import { promiseDelay } from 'src/lib/helpers';
 import { KeyPricesService } from '../keyprices.service';
 
 @Processor('maker')
@@ -73,7 +61,10 @@ export class MakerProcessor {
         quality: number = 0,
         previousResult: (BuyListing | SellListing)[] = [],
         page = 1
-    ): Promise<(BuyListing | SellListing)[]> {
+    ): Promise<{
+        listings: (BuyListing | SellListing)[];
+        incomplete: boolean;
+    }> {
         const start = new Date().getTime();
 
         let name;
@@ -86,20 +77,30 @@ export class MakerProcessor {
 
         if (!name) return null;
 
-        const { data } = (await axios({
-            method: 'GET',
-            url: 'https://backpack.tf/api/classifieds/search/v1',
-            params: {
-                page,
-                item: name,
-                tradable: 1,
-                key: process.env.BPTF_API_KEY,
-                fold: 1,
-                page_size: 30,
-                quality,
-            },
-            timeout: 10 * 1000,
-        })) as { data: SearchListingResponse };
+        let data;
+
+        try {
+            const res = await axios({
+                method: 'GET',
+                url: 'https://backpack.tf/api/classifieds/search/v1',
+                params: {
+                    page,
+                    item: name,
+                    tradable: 1,
+                    key: process.env.BPTF_API_KEY,
+                    fold: 1,
+                    page_size: 30,
+                    quality,
+                },
+                timeout: 10 * 1000,
+            });
+            data = res.data;
+        } catch (err) {
+            return {
+                listings: previousResult,
+                incomplete: true,
+            };
+        }
 
         const end = new Date().getTime();
 
@@ -125,7 +126,11 @@ export class MakerProcessor {
             );
         }
 
-        if (quality == 15) return previousResult.concat(result || []);
+        if (quality == 15)
+            return {
+                listings: previousResult.concat(result || []),
+                incomplete: false,
+            };
 
         if (quality !== 15) {
             page = 0;
@@ -145,7 +150,7 @@ export class MakerProcessor {
     }
 
     private async generateSnapshots(defindex: string | number): Promise<void> {
-        const listings = await this.getAllListings(defindex);
+        const { listings, incomplete } = await this.getAllListings(defindex);
 
         if (!listings) return;
         const time = this.getUnix();
@@ -265,6 +270,7 @@ export class MakerProcessor {
                 sku,
                 listings: ids,
                 savedAt: time,
+                incomplete,
             }).save();
 
             let name = '';
