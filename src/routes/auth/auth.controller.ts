@@ -33,23 +33,8 @@ export class AuthController {
     @UseGuards(RequireAuthGuard)
     @Redirect('/')
     public redirectUser(@Req() req: Request): { url: string } {
-        console.log(req.headers.cookie);
-
-        const parseCookie = (str) =>
-            str
-                .split(';')
-                .map((v) => v.split('='))
-                .reduce((acc, v) => {
-                    acc[decodeURIComponent(v[0].trim())] = decodeURIComponent(
-                        v[1].trim()
-                    );
-                    return acc;
-                }, {});
-
         return {
-            url: `${process.env.FRONTEND_RETURN_URL}?cookie=${
-                parseCookie(req.headers.cookie)['snapshots.tf']
-            }`,
+            url: process.env.FRONTEND_RETURN_URL,
         };
     }
 }

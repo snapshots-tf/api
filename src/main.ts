@@ -15,6 +15,16 @@ const allowedCorsDomains = [
     'http://localhost:3000',
 ];
 
+const cookieSettings: any = {
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+    secure: process.env.DEV !== 'true',
+    httpOnly: process.env.DEV !== 'true',
+};
+
+if (process.env.DEV !== 'true') {
+    cookieSettings.domain = 'snapshots.tf';
+}
+
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
@@ -44,12 +54,9 @@ async function bootstrap() {
             }),
             name: 'snapshots.tf',
             secret: ['Ic7n93JBY7vx', 'Tm33RN1WTTnM', 'u2Q8Q2jjJEPb'],
-            resave: false,
-            saveUninitialized: false,
-            cookie: {
-                secure: process.env.NODE_ENV === 'true',
-                maxAge: 1209600000,
-            },
+            resave: true,
+            saveUninitialized: true,
+            cookie: cookieSettings,
         })
     );
 
