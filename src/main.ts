@@ -18,7 +18,7 @@ const allowedCorsDomains = [
 const cookieSettings: any = {
     maxAge: 1000 * 60 * 60 * 24 * 7,
     secure: process.env.DEV !== 'true',
-    httpOnly: process.env.DEV !== 'true',
+    httpOnly: process.env.DEV === 'true',
 };
 
 if (process.env.DEV !== 'true') {
@@ -43,7 +43,7 @@ async function bootstrap() {
         customCss,
     });
 
-    console.log('Cookie Settings', cookieSettings)
+    console.log('Cookie Settings', cookieSettings);
 
     app.use(
         session({
