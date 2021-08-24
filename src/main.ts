@@ -59,6 +59,7 @@ async function bootstrap() {
             resave: true,
             saveUninitialized: true,
             cookie: cookieSettings,
+            proxy: true,
         })
     );
 
