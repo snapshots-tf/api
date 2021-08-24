@@ -174,11 +174,14 @@ export class MakerProcessor {
 
                 if (defindex === 'undefined' || sku === 'undefined') {
                     this.logger.warn('Failed to parse: ' + listing.item.name);
+                    sku = null;
                 }
             } catch (err) {
                 this.logger.warn('Failed to parse: ' + listing.item.name);
                 continue;
             }
+
+            if (!sku) continue;
 
             const parsed = this.parseListing(listing);
 
