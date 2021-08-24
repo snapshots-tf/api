@@ -43,6 +43,8 @@ async function bootstrap() {
         customCss,
     });
 
+    console.log('Cookie Settings', cookieSettings)
+
     app.use(
         session({
             store: require('connect-mongo').create({
