@@ -1,3 +1,27 @@
+import { Currency } from '../api-responses';
+
+export interface BPTFSnapshotListing {
+    steamid: string;
+    offers: 1 | 0;
+    buyout: 1 | 0;
+    details: string;
+    intent: 'sell' | 'buy';
+    timestamp: number;
+    bump: number;
+    price: number;
+    item: {
+        id: string;
+        original_id: string;
+        defindex: number;
+        attributes: Attributes[];
+    };
+    currencies: Currency;
+    userAgent?: {
+        client: string;
+        lastPulse: number;
+    };
+}
+
 export interface SearchListingResponse {
     buy: {
         total: number;
