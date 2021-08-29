@@ -64,7 +64,7 @@ export class MakerProcessor {
             method: 'GET',
             url: 'https://backpack.tf/api/classifieds/listings/snapshot',
             params: {
-                sku: stringify(parseSKU(sku)),
+                sku: stringify(parseSKU(sku), { determineUniqueHat: true }),
                 token: process.env.BPTF_TOKEN,
                 appid: 440,
             },
