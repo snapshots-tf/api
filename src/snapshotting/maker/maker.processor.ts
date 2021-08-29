@@ -36,6 +36,7 @@ export class MakerProcessor {
 
     @Process('snapshot')
     async handleSnapshot(job: Job<{ sku: string }>): Promise<void> {
+        this.logger.log(`Started processing ${job.data.sku}!`);
         if (!this.keyPricesService.getKeyPrice()) {
             this.logger.warn('No key price yet!');
             throw new Error('No key price!');
@@ -73,7 +74,9 @@ export class MakerProcessor {
     }
 
     private async generateSnapshots(sku: string): Promise<void> {
+        this.logger.log(`Getting listings!`);
         const listings = await this.getListings(sku);
+        this.logger.log(`Got listings!`);
         const name = stringify(parseSKU(sku));
 
         if (!listings) return;
@@ -134,6 +137,7 @@ export class MakerProcessor {
 
         let buyListingsAmount = 0;
 
+        this.logger.log(`Starting to save and update listings.!`);
         for (let i = 0; i < snapshot.length; i++) {
             const listing = snapshot[i];
             const has = await this.listingsModel
@@ -167,12 +171,15 @@ export class MakerProcessor {
                 ids.push(has._id);
             }
         }
+        this.logger.log(`Updated and saved listings!`);
 
+        this.logger.log(`Saving snapshot`);
         const doc = await new this.snapshotsModel({
             sku,
             listings: ids,
             savedAt: time,
         }).save();
+        this.logger.log(`Saved snapshot!`);
 
         this.snapshotsGateway.emitMessage('snapshot', {
             listings: {
@@ -187,6 +194,7 @@ export class MakerProcessor {
 
         this.logger.debug(`Saved ${sku} (${doc._id})!`);
 
+        this.logger.log(`Starting to save users!`);
         await this.saveManyUsers(steamIDS);
     }
 
@@ -218,6 +226,7 @@ export class MakerProcessor {
                 key: process.env.BPTF_API_KEY,
                 steamids: steamIDS.join(','),
             },
+            timeout: 5 * 1000,
         });
 
         const time = this.getUnix();
