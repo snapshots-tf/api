@@ -3,7 +3,7 @@ import { toSKU } from 'tf2-item-format/static';
 import { SKUAttributes } from 'tf2-item-format';
 
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, Interval, Timeout } from '@nestjs/schedule';
+import { Interval, Timeout } from '@nestjs/schedule';
 import { MakerService } from 'src/snapshotting/maker/maker.service';
 import { KeyPricesService } from '../keyprices.service';
 
@@ -70,7 +70,7 @@ export class TasksService {
         this.handleInterval().catch(() => null);
     }
 
-    private async getAllItems(): Promise<number[]> {
+    private async getAllItems(): Promise<string[]> {
         const response = (await axios({
             method: 'GET',
             url: 'https://backpack.tf/api/IGetPrices/v4',
@@ -84,22 +84,6 @@ export class TasksService {
 
         const items = response.data.response.items;
 
-        const defindexes = [];
-
-        for (const name in items) {
-            for (let i = 0; i < items[name].defindex.length; i++) {
-                if (
-                    !defindexes.includes(items[name].defindex[i]) &&
-                    items[name].defindex[i] !== 16007
-                ) {
-                    defindexes.push(items[name].defindex[i]);
-                }
-            }
-        }
-
-        return defindexes;
-
-        /*
         const skus = [];
 
         for (const name in items) {
@@ -142,6 +126,5 @@ export class TasksService {
         }
 
         return skus;
-        */
     }
 }

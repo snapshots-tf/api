@@ -2,12 +2,11 @@ import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
+import * as md5 from 'blueimp-md5';
 import { Job } from 'bull';
 import { Model } from 'mongoose';
-import { SnapshotNamespace } from 'src/common/namespaces';
-import { BuyListing, SellListing } from 'src/common/types/bptf';
+import { BPTFSnapshotListing } from 'src/common/types/bptf';
 import { fillCurrency } from 'src/lib/currency';
-import { promiseDelay } from 'src/lib/helpers';
 import { getImageFromSKU } from 'src/lib/images';
 import PAINTS from 'src/lib/paints';
 import { ListingDocument } from 'src/lib/schemas/listing.schema';
@@ -16,12 +15,7 @@ import { UserDocument } from 'src/lib/schemas/users.schema';
 import SPELLS from 'src/lib/spells';
 import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
 import * as Currencies from 'tf2-currencies-lite';
-import {
-    parseSKU,
-    parseString,
-    stringify,
-    toSKU,
-} from 'tf2-item-format/static';
+import { parseSKU, stringify } from 'tf2-item-format/static';
 import { requireStatic, SchemaEnum } from 'tf2-static-schema';
 import { KeyPricesService } from '../keyprices.service';
 
@@ -41,9 +35,7 @@ export class MakerProcessor {
     ) {}
 
     @Process('snapshot')
-    async handleSnapshot(
-        job: Job<{ defindex: string | number }>
-    ): Promise<void> {
+    async handleSnapshot(job: Job<{ sku: string }>): Promise<void> {
         if (!this.keyPricesService.getKeyPrice()) {
             this.logger.warn('No key price yet!');
             throw new Error('No key price!');
@@ -51,137 +43,49 @@ export class MakerProcessor {
 
         if (process.env.DEV === 'true') return;
 
-        await this.generateSnapshots(job.data.defindex).catch((err) => {
+        await this.generateSnapshots(job.data.sku).catch((err) => {
             console.log(err);
         });
     }
 
-    private async getAllListings(
-        defindex: string | number,
-        quality: number = 0,
-        previousResult: (BuyListing | SellListing)[] = [],
-        page = 1
-    ): Promise<{
-        listings: (BuyListing | SellListing)[];
-        incomplete: boolean;
-    }> {
-        const start = new Date().getTime();
-
-        let name;
-
-        try {
-            name = stringify(parseSKU(defindex + ';6'));
-        } catch (err) {
-            this.logger.warn('Failed to parse: ' + (defindex + ';6'));
-        }
-
-        if (!name) return null;
-
-        let data;
-
-        try {
-            const res = await axios({
-                method: 'GET',
-                url: 'https://backpack.tf/api/classifieds/search/v1',
-                params: {
-                    page,
-                    item: name,
-                    tradable: 1,
-                    key: process.env.BPTF_API_KEY,
-                    fold: 1,
-                    page_size: 30,
-                    quality,
-                },
-                timeout: 10 * 1000,
-            });
-            data = res.data;
-        } catch (err) {
-            return {
-                listings: previousResult,
-                incomplete: true,
-            };
-        }
-
-        const end = new Date().getTime();
-
-        const qualitySkips = {
-            1: 3,
-            11: 13,
-        };
-
-        const shouldPaginateAgain =
-            data.sell.listings.length >= 30 || data.buy.listings.length >= 30;
-
-        // @ts-ignore
-        const result = data.sell.listings.concat(data.buy.listings);
-
-        if (shouldPaginateAgain) {
-            await promiseDelay(1100 - (end - start));
-
-            return this.getAllListings(
-                defindex,
-                quality,
-                previousResult.concat(result),
-                page + 1
-            );
-        }
-
-        if (quality == 15)
-            return {
-                listings: previousResult.concat(result || []),
-                incomplete: false,
-            };
-
-        if (quality !== 15) {
-            page = 0;
-
-            await promiseDelay(1100 - (end - start));
-
-            if (qualitySkips[quality]) quality = qualitySkips[quality];
-            else quality++;
-
-            return this.getAllListings(
-                defindex,
-                quality,
-                previousResult.concat(result),
-                page + 1
-            );
+    private generateListingID(
+        listing: BPTFSnapshotListing,
+        name: string
+    ): string {
+        if (listing.intent === 'sell') {
+            return '440_' + listing.steamid + '_' + listing.item.id;
+        } else {
+            return '440_' + listing.steamid + '_' + md5(name);
         }
     }
 
-    private async generateSnapshots(defindex: string | number): Promise<void> {
-        const { listings, incomplete } = await this.getAllListings(defindex);
+    private async getListings(sku: string): Promise<BPTFSnapshotListing[]> {
+        return axios({
+            method: 'GET',
+            url: 'https://backpack.tf/api/classifieds/listings/snapshot',
+            params: {
+                sku: stringify(parseSKU(sku)),
+                token: process.env.BPTF_TOKEN,
+                appid: 440,
+            },
+        }).then((res) => res.data.listings);
+    }
+
+    private async generateSnapshots(sku: string): Promise<void> {
+        const listings = await this.getListings(sku);
+        const name = stringify(parseSKU(sku));
 
         if (!listings) return;
+
         const time = this.getUnix();
         const keyPrice = this.keyPricesService.getKeyPrice();
 
-        const snapshots: {
-            [sku: string]: SnapshotNamespace.Listing[];
-        } = {};
+        let snapshot = [];
 
         const steamIDS: string[] = [];
 
         for (let i = 0; i < listings.length; i++) {
             const listing = listings[i];
-
-            let sku;
-
-            try {
-                sku = toSKU(parseString(listing.item.name, true, true));
-
-                const defindex = sku.split(';')[0];
-
-                if (defindex === 'undefined' || sku === 'undefined') {
-                    this.logger.warn('Failed to parse: ' + listing.item.name);
-                    sku = null;
-                }
-            } catch (err) {
-                this.logger.warn('Failed to parse: ' + listing.item.name);
-                continue;
-            }
-
-            if (!sku) continue;
 
             const parsed = this.parseListing(listing);
 
@@ -189,114 +93,98 @@ export class MakerProcessor {
                 steamIDS.push(listing.steamid);
 
             const snapshotListing = {
-                buying: listing.intent === 0,
-                automatic: listing.automatic === 1,
-                listingID: listing.id,
+                buying: listing.intent === 'buy',
+                automatic: !!listing.userAgent,
+                listingID: this.generateListingID(listing, name),
                 paint: parsed.paint,
                 spells: parsed.spells,
                 parts: parsed.parts,
                 currencies: fillCurrency(listing.currencies),
                 bumped: listing.bump,
-                created: listing.created,
+                created: listing.timestamp,
                 steamID64: listing.steamid,
             };
 
-            if (!snapshots[sku]) snapshots[sku] = [];
-            snapshots[sku].push(snapshotListing);
+            snapshot.push(snapshotListing);
         }
 
-        for (const sku in snapshots) {
-            const listings = snapshots[sku];
-
-            // Descending
-            const buyListings = listings
-                .filter((listing) => listing.buying)
-                .sort((a, b) => {
-                    return (
-                        new Currencies(b.currencies).toValue(keyPrice.metal) -
-                        new Currencies(a.currencies).toValue(keyPrice.metal)
-                    );
-                });
-            // Ascending
-            const sellListings = listings
-                .filter((listing) => !listing.buying)
-                .sort((a, b) => {
-                    return (
-                        new Currencies(a.currencies).toValue(keyPrice.metal) -
-                        new Currencies(b.currencies).toValue(keyPrice.metal)
-                    );
-                });
-
-            snapshots[sku] = buyListings.concat(sellListings);
-        }
-
-        for (const sku in snapshots) {
-            const ids: string[] = [];
-
-            let buyListings = 0;
-
-            for (let i = 0; i < snapshots[sku].length; i++) {
-                const listing = snapshots[sku][i];
-                const has = await this.listingsModel
-                    .findOne({
-                        'listing.listingID': listing.listingID,
-                    })
-                    .lean();
-
-                if (listing.buying) buyListings++;
-
-                if (!has) {
-                    const doc = await new this.listingsModel({
-                        sku,
-                        listing,
-                        savedAt: time,
-                        lastSeen: time,
-                    }).save();
-
-                    ids.push(doc._id);
-                } else {
-                    await this.listingsModel.updateOne(
-                        {
-                            'listing.listingID': listing.listingID,
-                        },
-                        {
-                            listing: listing,
-                            lastSeen: time,
-                        }
-                    );
-
-                    ids.push(has._id);
-                }
-            }
-
-            const doc = await new this.snapshotsModel({
-                sku,
-                listings: ids,
-                savedAt: time,
-                incomplete,
-            }).save();
-
-            let name = '';
-
-            try {
-                name = stringify(parseSKU(sku));
-            } catch (err) {
-                this.logger.warn('Failed to stringify ' + sku);
-            }
-
-            this.snapshotsGateway.emitMessage('snapshot', {
-                listings: {
-                    buy: buyListings,
-                    sell: snapshots[sku].length - buyListings,
-                },
-                sku,
-                name: name,
-                id: doc._id,
-                image: getImageFromSKU(sku),
+        // Descending
+        const buyListings = snapshot
+            .filter((listing) => listing.buying)
+            .sort((a, b) => {
+                return (
+                    new Currencies(b.currencies).toValue(keyPrice.metal) -
+                    new Currencies(a.currencies).toValue(keyPrice.metal)
+                );
+            });
+        // Ascending
+        const sellListings = snapshot
+            .filter((listing) => !listing.buying)
+            .sort((a, b) => {
+                return (
+                    new Currencies(a.currencies).toValue(keyPrice.metal) -
+                    new Currencies(b.currencies).toValue(keyPrice.metal)
+                );
             });
 
-            this.logger.debug(`Saved ${sku}!`);
+        snapshot = buyListings.concat(sellListings);
+
+        const ids: string[] = [];
+
+        let buyListingsAmount = 0;
+
+        for (let i = 0; i < snapshot.length; i++) {
+            const listing = snapshot[i];
+            const has = await this.listingsModel
+                .findOne({
+                    'listing.listingID': listing.listingID,
+                })
+                .lean();
+
+            if (listing.buying) buyListingsAmount++;
+
+            if (!has) {
+                const doc = await new this.listingsModel({
+                    sku,
+                    listing,
+                    savedAt: time,
+                    lastSeen: time,
+                }).save();
+
+                ids.push(doc._id);
+            } else {
+                await this.listingsModel.updateOne(
+                    {
+                        'listing.listingID': listing.listingID,
+                    },
+                    {
+                        listing: listing,
+                        lastSeen: time,
+                    }
+                );
+
+                ids.push(has._id);
+            }
         }
+
+        const doc = await new this.snapshotsModel({
+            sku,
+            listings: ids,
+            savedAt: time,
+        }).save();
+
+        this.snapshotsGateway.emitMessage('snapshot', {
+            listings: {
+                buy: buyListings,
+                sell: snapshot.length - buyListingsAmount,
+            },
+            sku,
+            name,
+            id: doc._id,
+            image: getImageFromSKU(sku),
+        });
+
+        this.logger.debug(`Saved ${sku} (${doc._id})!`);
 
         await this.saveManyUsers(steamIDS);
     }
@@ -455,7 +343,7 @@ export class MakerProcessor {
         }
     }
 
-    private parseListing(listing: BuyListing | SellListing): {
+    private parseListing(listing: BPTFSnapshotListing): {
         parts: string[];
         paint: string;
         spells: string[];

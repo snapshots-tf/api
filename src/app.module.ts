@@ -42,7 +42,7 @@ import CustomHttpCacheInterceptor from './common/interceptors/CustomCache';
             },
             limiter: {
                 max: 1,
-                duration: 1000,
+                duration: 500,
                 bounceBack: true,
             },
             defaultJobOptions: {

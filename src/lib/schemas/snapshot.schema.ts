@@ -18,9 +18,6 @@ export class Snapshot {
 
     @Prop({ required: true, type: mongoose.Schema.Types.Mixed })
     listings: SnapshotNamespace.SnapshotListings;
-
-    @Prop({ required: true })
-    incomplete?: boolean;
 }
 
 export const SnapshotSchema = SchemaFactory.createForClass(Snapshot);

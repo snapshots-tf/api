@@ -6,11 +6,10 @@ import {
     HttpException,
     HttpStatus,
     Param,
-    Post,
-    UseGuards,
-    Query,
     ParseIntPipe,
-    Header,
+    Post,
+    Query,
+    UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -20,14 +19,13 @@ import {
     ApiOperation,
     ApiTags,
 } from '@nestjs/swagger';
+import { parseSKU, stringify } from 'tf2-item-format/static';
 import { GetSnapshotsOverview, GetStats } from './common/api-responses';
-import { testSKU } from './lib/skus';
-import { MakerService } from './snapshotting/maker/maker.service';
-import { SnapshotsService } from './routes/snapshots/snapshots.service';
-import { ListingsService } from './routes/listings/listings.service';
-import { stringify, parseSKU } from 'tf2-item-format/static';
 import { getImageFromSKU, ItemImages } from './lib/images';
-import { BadRequestError } from 'passport-headerapikey';
+import { testSKU } from './lib/skus';
+import { ListingsService } from './routes/listings/listings.service';
+import { SnapshotsService } from './routes/snapshots/snapshots.service';
+import { MakerService } from './snapshotting/maker/maker.service';
 import { StatsService } from './snapshotting/stats.service';
 
 @ApiTags('index')
@@ -131,9 +129,9 @@ export class AppController {
         return this.statsService.getStats();
     }
 
-    @Post('/request/:defindex')
+    @Post('/request/:sku')
     @ApiOperation({
-        summary: 'Request a defindex to be snapshotted.',
+        summary: 'Request a sku to be snapshotted.',
     })
     @UseGuards(AuthGuard('api-key'))
     @ApiHeader({
@@ -142,25 +140,19 @@ export class AppController {
             "This key is required for this endpoint to work, get it by first going to /auth/steam then /me/api-key. It's bound to the account you sign in with.",
     })
     async request(
-        @Param('defindex') defindex: string
+        @Param('sku') sku: string
     ): Promise<{ enqueued: boolean; expected: number }> {
-        if (defindex.indexOf(';') !== -1)
-            throw new HttpException(
-                'Invalid defindex!',
-                HttpStatus.BAD_REQUEST
-            );
+        if (!testSKU(sku))
+            throw new HttpException('Invalid SKU!', HttpStatus.BAD_REQUEST);
 
         try {
-            stringify(parseSKU(defindex + ';6'));
+            stringify(parseSKU(sku));
         } catch (err) {
-            throw new HttpException(
-                'Invalid defindex!',
-                HttpStatus.BAD_REQUEST
-            );
+            throw new HttpException('Invalid sku!', HttpStatus.BAD_REQUEST);
         }
 
         try {
-            const when = await this.makerService.enqueue(defindex);
+            const when = await this.makerService.enqueue(sku);
 
             return {
                 enqueued: true,
