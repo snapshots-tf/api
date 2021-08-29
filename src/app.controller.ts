@@ -152,7 +152,7 @@ export class AppController {
         }
 
         try {
-            const when = await this.makerService.enqueue(sku);
+            const when = await this.makerService.enqueue(sku, true);
 
             return {
                 enqueued: true,
