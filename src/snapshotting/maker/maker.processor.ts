@@ -68,6 +68,7 @@ export class MakerProcessor {
                 token: process.env.BPTF_TOKEN,
                 appid: 440,
             },
+            timeout: 5 * 1000,
         }).then((res) => res.data.listings);
     }
 
