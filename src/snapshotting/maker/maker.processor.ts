@@ -175,7 +175,7 @@ export class MakerProcessor {
 
         this.snapshotsGateway.emitMessage('snapshot', {
             listings: {
-                buy: buyListings,
+                buy: buyListings.length,
                 sell: snapshot.length - buyListingsAmount,
             },
             sku,
