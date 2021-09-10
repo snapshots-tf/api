@@ -59,11 +59,8 @@ export class MakerService {
                     removeOnComplete: true,
                 }
             )
-            .then(async () => {
-                return (
-                    Math.round(new Date().getTime() / 1000) +
-                    (await this.getWaitingCount()) * 1000
-                );
+            .then(() => {
+                return 0;
             });
     }
 

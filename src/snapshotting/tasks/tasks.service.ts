@@ -42,7 +42,7 @@ export class TasksService {
     async handleInterval() {
         if (process.env.SKIP_ITEM_GETTING === 'true') return;
 
-        const waiting = await this.makerService.getWaitingCount();
+        const waiting = await (await this.makerService.getCount()).waiting;
 
         this.logger.debug('Get items, waiting: ' + waiting);
 
