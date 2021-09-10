@@ -1,6 +1,6 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
-import { Job, Queue } from 'bull';
+import Bull, { Job, Queue } from 'bull';
 
 @Injectable()
 export class MakerService {
@@ -14,12 +14,8 @@ export class MakerService {
         private readonly makerQueue: Queue<{ sku: string }>
     ) {}
 
-    async getFailedCount(): Promise<number> {
-        return this.makerQueue.getFailedCount();
-    }
-
-    async getWaitingCount(): Promise<number> {
-        return await this.makerQueue.getWaitingCount();
+    async getCount(): Promise<Bull.JobCounts> {
+        return this.makerQueue.getJobCounts();
     }
 
     async getQueue(): Promise<Job<{ sku: string }>[]> {

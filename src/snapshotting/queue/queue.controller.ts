@@ -12,6 +12,7 @@ import {
     ApiOperation,
     ApiTags,
 } from '@nestjs/swagger';
+import Bull from 'bull';
 import { ClearQueue, GetQueueStatus } from 'src/common/api-responses';
 import { QueueService } from './queue.service';
 
@@ -27,7 +28,7 @@ export class QueueController {
     @ApiOkResponse({
         type: GetQueueStatus,
     })
-    async queue(): Promise<{ failed: number; waiting: number }> {
+    async queue(): Promise<Bull.JobCounts> {
         return await this.queueService.getQueueStatus();
     }
 
