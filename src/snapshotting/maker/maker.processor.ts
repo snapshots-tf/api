@@ -4,14 +4,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
 import * as md5 from 'blueimp-md5';
 import { Job } from 'bull';
-import { Model } from 'mongoose';
+import { LeanDocument, Model } from 'mongoose';
 import { BPTFSnapshotListing } from 'src/common/types/bptf';
 import { fillCurrency } from 'src/lib/currency';
 import { getImageFromSKU } from 'src/lib/images';
 import PAINTS from 'src/lib/paints';
 import { ListingDocument } from 'src/lib/schemas/listing.schema';
 import { SnapshotDocument } from 'src/lib/schemas/snapshot.schema';
-import { UserDocument } from 'src/lib/schemas/users.schema';
+import { User, UserDocument } from 'src/lib/schemas/users.schema';
 import SPELLS from 'src/lib/spells';
 import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
 import * as Currencies from 'tf2-currencies-lite';
@@ -137,7 +137,6 @@ export class MakerProcessor {
 
         let buyListingsAmount = 0;
 
-        this.logger.log(`Starting to save and update listings.!`);
         for (let i = 0; i < snapshot.length; i++) {
             const listing = snapshot[i];
             const has = await this.listingsModel
@@ -171,15 +170,12 @@ export class MakerProcessor {
                 ids.push(has._id);
             }
         }
-        this.logger.log(`Updated and saved listings!`);
 
-        this.logger.log(`Saving snapshot`);
         const doc = await new this.snapshotsModel({
             sku,
             listings: ids,
             savedAt: time,
         }).save();
-        this.logger.log(`Saved snapshot!`);
 
         this.snapshotsGateway.emitMessage('snapshot', {
             listings: {
@@ -211,14 +207,27 @@ export class MakerProcessor {
             return resultArray;
         }, []);
 
+        this.logger.log('Getting users');
+
+        const users = await this.usersModel
+            .find({
+                steamID64: { $in: steamIDS },
+            })
+            .lean();
+
+        this.logger.log('Got users');
+
         for (let i = 0; i < chunks.length; i++) {
             try {
-                await this.saveUserData(chunks[i]);
+                await this.saveUserData(chunks[i], users);
             } catch (err) {}
         }
     }
 
-    private async saveUserData(steamIDS: string[]): Promise<void> {
+    private async saveUserData(
+        steamIDS: string[],
+        users: LeanDocument<UserDocument>[]
+    ): Promise<void> {
         const { data } = await axios({
             method: 'GET',
             url: 'https://backpack.tf/api/users/info/v1',
@@ -229,13 +238,15 @@ export class MakerProcessor {
             timeout: 5 * 1000,
         });
 
+        this.logger.log('Got api response');
+
         const time = this.getUnix();
+
+        const docsToSave = [];
 
         for (const steamID64 in data.users) {
             const user = data.users[steamID64];
-            const has = await this.usersModel
-                .findOne({ steamID64: steamID64 })
-                .lean();
+            const has = users.find((user) => steamID64 === user.steamID64);
 
             const donated = parseFloat((user?.donated || 0).toFixed(2));
             const suggestionsCreated = user?.voting?.suggestions?.created || 0;
@@ -248,7 +259,7 @@ export class MakerProcessor {
             const negativeTrust = user?.trust?.negative || 0;
 
             if (!has) {
-                await new this.usersModel({
+                docsToSave.push({
                     steamID64,
                     name: user.name,
                     avatar: user.avatar,
@@ -276,9 +287,7 @@ export class MakerProcessor {
                             name: user.name,
                         },
                     ],
-                }).save();
-
-                this.logger.debug(`Saved ${steamID64}!`);
+                });
             } else {
                 const toUpdate = {};
 
@@ -351,6 +360,12 @@ export class MakerProcessor {
                 }
             }
         }
+
+        this.logger.log('Inserting many');
+
+        await this.usersModel.insertMany(docsToSave);
+
+        this.logger.log('Inserted many');
     }
 
     private parseListing(listing: BPTFSnapshotListing): {
