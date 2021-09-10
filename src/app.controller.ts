@@ -142,6 +142,10 @@ export class AppController {
     async request(
         @Param('sku') sku: string
     ): Promise<{ enqueued: boolean; expected: number }> {
+        throw new BadRequestException(
+            'This endpoint is currently disabled for investigation!'
+        );
+
         if (!testSKU(sku))
             throw new HttpException('Invalid SKU!', HttpStatus.BAD_REQUEST);
 
