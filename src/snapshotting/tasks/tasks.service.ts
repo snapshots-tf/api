@@ -1,10 +1,12 @@
-import axios from 'axios';
-import { toSKU } from 'tf2-item-format/static';
-import { SKUAttributes } from 'tf2-item-format';
-
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Interval, Timeout } from '@nestjs/schedule';
+import axios from 'axios';
+import { Model } from 'mongoose';
+import { ListingDocument } from 'src/lib/schemas/listing.schema';
 import { MakerService } from 'src/snapshotting/maker/maker.service';
+import { SKUAttributes } from 'tf2-item-format';
+import { toSKU } from 'tf2-item-format/static';
 import { KeyPricesService } from '../keyprices.service';
 
 interface IGetPricesPrice {
@@ -35,7 +37,9 @@ export class TasksService {
 
     constructor(
         private makerService: MakerService,
-        private keyPricesService: KeyPricesService
+        private keyPricesService: KeyPricesService,
+        @InjectModel('listings')
+        private readonly listingsModel: Model<ListingDocument>
     ) {}
 
     @Interval(28800 * 1000)
@@ -82,6 +86,8 @@ export class TasksService {
             data: { response: { items: { [name: string]: IGetPricesItem } } };
         };
 
+        const distinct = await this.listingsModel.distinct('sku');
+
         const items = response.data.response.items;
 
         const skus = [];
@@ -123,6 +129,10 @@ export class TasksService {
                 if (craftableItem) parseItem(craftableItem, true);
                 if (unCraftableItem) parseItem(unCraftableItem, false);
             }
+        }
+
+        for (let i = 0; i < distinct.length; i++) {
+            if (!skus.includes(distinct[i])) skus.push(distinct[i]);
         }
 
         return skus;
