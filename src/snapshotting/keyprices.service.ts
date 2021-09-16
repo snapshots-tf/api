@@ -1,4 +1,3 @@
-import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { promiseDelay } from 'src/lib/helpers';

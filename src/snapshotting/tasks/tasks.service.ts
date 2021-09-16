@@ -42,11 +42,10 @@ export class TasksService {
         private readonly listingsModel: Model<ListingDocument>
     ) {}
 
-    @Interval(28800 * 1000)
-    async handleInterval() {
+    async enqueueAllItems(): Promise<void> {
         if (process.env.SKIP_ITEM_GETTING === 'true') return;
 
-        const waiting = await (await this.makerService.getCount()).waiting;
+        const waiting = await this.makerService.getQueueCount();
 
         this.logger.debug('Get items, waiting: ' + waiting);
 
@@ -56,8 +55,8 @@ export class TasksService {
 
         this.logger.debug('Got ' + items.length + ' items!');
 
-        items.forEach(async (sku) => {
-            await this.makerService.enqueue(sku, true).catch((err) => null);
+        items.forEach((sku) => {
+            this.makerService.enqueue(sku);
         });
 
         this.logger.debug('Done getting items!');
@@ -71,7 +70,7 @@ export class TasksService {
 
     @Timeout(1000)
     handleTimeout(): void {
-        this.handleInterval().catch(() => null);
+        this.enqueueAllItems().catch(() => null);
     }
 
     private async getAllItems(): Promise<string[]> {

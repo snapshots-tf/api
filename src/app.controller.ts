@@ -145,29 +145,6 @@ export class AppController {
         throw new BadRequestException(
             'This endpoint is currently disabled for investigation!'
         );
-
-        if (!testSKU(sku))
-            throw new HttpException('Invalid SKU!', HttpStatus.BAD_REQUEST);
-
-        try {
-            stringify(parseSKU(sku));
-        } catch (err) {
-            throw new HttpException('Invalid sku!', HttpStatus.BAD_REQUEST);
-        }
-
-        try {
-            const when = await this.makerService.enqueue(sku, true);
-
-            return {
-                enqueued: true,
-                expected: when,
-            };
-        } catch (err) {
-            throw new BadRequestException({
-                status: HttpStatus.BAD_REQUEST,
-                error: 'We already have 5 or more of that item in our queue.',
-            });
-        }
     }
 
     @Get('/overview/human')
