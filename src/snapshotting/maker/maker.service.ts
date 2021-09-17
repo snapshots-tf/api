@@ -136,7 +136,9 @@ export class MakerService {
 
             const snapshotListing = {
                 buying: listing.intent === 'buy',
-                automatic: !!listing.userAgent,
+                automatic:
+                    listing.userAgent !== undefined &&
+                    time - listing.userAgent.lastPulse < 5 * 60,
                 listingID: this.generateListingID(listing, name),
                 paint: parsed.paint,
                 spells: parsed.spells,
