@@ -79,7 +79,7 @@ export class MakerService {
 
         const end = new Date().getTime();
 
-        await promiseDelay(500 - (end - start));
+        await promiseDelay(250 - (end - start));
 
         this.processing = false;
 
