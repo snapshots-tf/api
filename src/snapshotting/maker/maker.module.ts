@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { MakerService } from './maker.service';
-
-import { SnapshotSchema } from '../../lib/schemas/snapshot.schema';
-import { ListingSchema } from '../../lib/schemas/listing.schema';
-import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
 import { UserSchema } from 'src/lib/schemas/users.schema';
+import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
+import { ListingSchema } from '../../lib/schemas/listing.schema';
+import { SnapshotSchema } from '../../lib/schemas/snapshot.schema';
 import { KeyPricesService } from '../keyprices.service';
-import { TasksService } from '../tasks/tasks.service';
+import { MakerService } from './maker.service';
+import { ItemService } from '../item/item.service';
 
 @Module({
     imports: [
@@ -27,7 +26,7 @@ import { TasksService } from '../tasks/tasks.service';
             },
         ]),
     ],
-    providers: [MakerService, SnapshotsGateway, KeyPricesService],
+    providers: [MakerService, SnapshotsGateway, KeyPricesService, ItemService],
     exports: [MakerService],
 })
 export class MakerModule {}

@@ -25,6 +25,8 @@ import { UserSchema } from './lib/schemas/users.schema';
 import CustomHttpCacheInterceptor from './common/interceptors/CustomCache';
 import { SnapshotsGateway } from './routes/snapshots/snapshots.gateway';
 import { KeyPricesService } from './snapshotting/keyprices.service';
+import { ItemModule } from './snapshotting/item/item.module';
+import { ItemService } from './snapshotting/item/item.service';
 
 @Module({
     imports: [
@@ -67,6 +69,7 @@ import { KeyPricesService } from './snapshotting/keyprices.service';
         ]),
         MeModule,
         UsersModule,
+        ItemModule,
     ],
     providers: [
         SnapshotsService,
@@ -79,6 +82,7 @@ import { KeyPricesService } from './snapshotting/keyprices.service';
             provide: APP_INTERCEPTOR,
             useClass: CustomHttpCacheInterceptor,
         },
+        ItemService,
     ],
     controllers: [AppController],
 })

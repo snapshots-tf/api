@@ -16,6 +16,7 @@ import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
 import * as Currencies from 'tf2-currencies-lite';
 import { parseSKU, stringify } from 'tf2-item-format/static';
 import { requireStatic, SchemaEnum } from 'tf2-static-schema';
+import { ItemService } from '../item/item.service';
 import { KeyPricesService } from '../keyprices.service';
 
 @Injectable()
@@ -34,7 +35,8 @@ export class MakerService {
         @InjectModel('listings') private listingsModel: Model<ListingDocument>,
         @InjectModel('users') private usersModel: Model<UserDocument>,
         private snapshotsGateway: SnapshotsGateway,
-        private keyPricesService: KeyPricesService
+        private keyPricesService: KeyPricesService,
+        private itemsService: ItemService
     ) {}
 
     getQueueCount(): number {
@@ -49,10 +51,19 @@ export class MakerService {
         return true;
     }
 
+    async enqueueAllItems(): Promise<void> {
+        const items = await this.itemsService.getAllItems();
+
+        items.forEach((sku) => this.enqueue(sku));
+    }
+
     async process(): Promise<void> {
         if (this.processing === true) return;
-        if (this.queue.length === 0) {
-            //await this.tasksService.enqueueAllItems();
+        if (this.getQueueCount() === 0) {
+            this.processing = true;
+            await this.enqueueAllItems();
+            this.processing = false;
+            this.process();
         }
 
         const start = new Date().getTime();
@@ -110,7 +121,7 @@ export class MakerService {
                 appid: 440,
             },
             timeout: 5 * 1000,
-        }).then((res) => res.data.listings);
+        }).then((res) => res.data.listings || []);
     }
 
     private async generateSnapshots(sku: string): Promise<void> {
@@ -230,7 +241,6 @@ export class MakerService {
 
         this.logger.debug(`Saved ${sku} (${doc._id})!`);
 
-        this.logger.log(`Starting to save users!`);
         await this.saveManyUsers(steamIDS);
     }
 
