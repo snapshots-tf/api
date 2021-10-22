@@ -139,12 +139,10 @@ export class AppController {
         description:
             "This key is required for this endpoint to work, get it by first going to /auth/steam then /me/api-key. It's bound to the account you sign in with.",
     })
-    async request(
-        @Param('sku') sku: string
-    ): Promise<{ enqueued: boolean; expected: number }> {
-        throw new BadRequestException(
-            'This endpoint is currently disabled for investigation!'
-        );
+    async request(@Param('sku') sku: string): Promise<{ enqueued: boolean }> {
+        return {
+            enqueued: this.makerService.enqueue(sku),
+        };
     }
 
     @Get('/overview/human')

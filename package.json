@@ -55,7 +55,7 @@
     "swagger-ui-express": "^4.1.6",
     "tf2-currencies-lite": "^1.2.4",
     "tf2-item-format": "^5.5.1",
-    "tf2-static-schema": "^1.13.0"
+    "tf2-static-schema": "^1.16.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.6.0",

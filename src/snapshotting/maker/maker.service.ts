@@ -44,6 +44,8 @@ export class MakerService {
     }
 
     enqueue(sku: string): boolean {
+        if (this.queue.includes(sku)) return false;
+
         this.queue.push(sku);
 
         this.process();
