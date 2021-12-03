@@ -5,7 +5,7 @@ import { SnapshotSchema } from 'src/lib/schemas/snapshot.schema';
 import { UserSchema } from 'src/lib/schemas/users.schema';
 import { ItemService } from 'src/snapshotting/item/item.service';
 import { KeyPricesService } from 'src/snapshotting/keyprices.service';
-import { MakerService } from 'src/snapshotting/maker/maker.service';
+import { MakerModule } from 'src/snapshotting/maker/maker.module';
 import { SnapshotsGateway } from '../snapshots/snapshots.gateway';
 import { SnapshotController } from './snapshot.controller';
 import { SnapshotService } from './snapshot.service';
@@ -13,7 +13,6 @@ import { SnapshotService } from './snapshot.service';
 @Module({
     controllers: [SnapshotController],
     providers: [
-        MakerService,
         SnapshotService,
         SnapshotsGateway,
         KeyPricesService,
@@ -32,6 +31,7 @@ import { SnapshotService } from './snapshot.service';
                 schema: UserSchema,
             },
         ]),
+        MakerModule,
     ],
 })
 export class SnapshotModule {}

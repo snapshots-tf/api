@@ -48,8 +48,6 @@ export class MakerService {
 
         this.queue.push(sku);
 
-        this.process();
-
         return true;
     }
 
@@ -57,6 +55,8 @@ export class MakerService {
         const items = await this.itemsService.getAllItems();
 
         items.forEach((sku) => this.enqueue(sku));
+
+        this.process();
     }
 
     async process(): Promise<void> {
@@ -77,13 +77,16 @@ export class MakerService {
 
         try {
             await this.handleSnapshot(entry);
-        } catch (err) {}
+        } catch (err) {
+            this.logger.error(
+                'Failed to process ' + entry + ': ' + err.message
+            );
+            this.processing = false;
+        }
 
         const end = new Date().getTime();
 
         await promiseDelay(250 - (end - start));
-
-        this.processing = false;
 
         this.process();
     }
@@ -97,9 +100,7 @@ export class MakerService {
 
         if (process.env.DEV === 'true') return;
 
-        await this.generateSnapshots(sku).catch((err) => {
-            console.log(err);
-        });
+        return await this.generateSnapshots(sku);
     }
 
     private generateListingID(
@@ -229,21 +230,22 @@ export class MakerService {
             listings: ids,
             savedAt: time,
         }).save();
-
-        this.snapshotsGateway.emitMessage('snapshot', {
-            listings: {
-                buy: buyListings.length,
-                sell: snapshot.length - buyListingsAmount,
-            },
-            sku,
-            name,
-            id: doc._id,
-            image: getImageFromSKU(sku),
-        });
-
         this.logger.debug(`Saved ${sku} (${doc._id})!`);
 
-        await this.saveManyUsers(steamIDS);
+        return await this.saveManyUsers(steamIDS).finally(() => {
+            this.snapshotsGateway.emitMessage('snapshot', {
+                listings: {
+                    buy: buyListings.length,
+                    sell: snapshot.length - buyListingsAmount,
+                },
+                sku,
+                name,
+                id: doc._id,
+                image: getImageFromSKU(sku),
+            });
+
+            this.processing = false;
+        });
     }
 
     private async saveManyUsers(steamIDS: string[]): Promise<void> {

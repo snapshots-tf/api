@@ -16,7 +16,6 @@ import { AppController } from './app.controller';
 import { SnapshotsService } from './routes/snapshots/snapshots.service';
 import { ListingSchema } from './lib/schemas/listing.schema';
 import { SnapshotSchema } from './lib/schemas/snapshot.schema';
-import { MakerService } from './snapshotting/maker/maker.service';
 import { MeModule } from './routes/me/me.module';
 import { ListingsService } from './routes/listings/listings.service';
 import { UsersModule } from './routes/users/users.module';
@@ -73,7 +72,6 @@ import { ItemService } from './snapshotting/item/item.service';
     ],
     providers: [
         SnapshotsService,
-        MakerService,
         ListingsService,
         StatsService,
         SnapshotsGateway,
@@ -83,6 +81,7 @@ import { ItemService } from './snapshotting/item/item.service';
             useClass: CustomHttpCacheInterceptor,
         },
         ItemService,
+        MakerModule,
     ],
     controllers: [AppController],
 })

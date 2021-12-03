@@ -5,20 +5,13 @@ import { ListingSchema } from 'src/lib/schemas/listing.schema';
 import { SnapshotSchema } from 'src/lib/schemas/snapshot.schema';
 import { UserSchema } from 'src/lib/schemas/users.schema';
 import { SnapshotsGateway } from 'src/routes/snapshots/snapshots.gateway';
-import { MakerService } from 'src/snapshotting/maker/maker.service';
 import { ItemService } from '../item/item.service';
 import { KeyPricesService } from '../keyprices.service';
 import { MakerModule } from '../maker/maker.module';
 import { TasksService } from './tasks.service';
 
 @Module({
-    providers: [
-        TasksService,
-        MakerService,
-        KeyPricesService,
-        SnapshotsGateway,
-        ItemService,
-    ],
+    providers: [TasksService, KeyPricesService, SnapshotsGateway, ItemService],
     imports: [
         ScheduleModule.forRoot(),
         MongooseModule.forFeature([
