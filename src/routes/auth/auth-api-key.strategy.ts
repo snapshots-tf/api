@@ -18,13 +18,9 @@ export class ApiKeyAuthStrategy extends PassportStrategy(Strategy, 'api-key') {
     }
 
     public validate = (key: string, done: (error: Error, data: any) => {}) => {
-        this.logger.log('Validating ' + key);
-
         this.authService
             .findByApiKey(key)
             .then((result) => {
-                this.logger.log('Result: ' + result);
-
                 if (result === true) {
                     done(null, true);
                 }
