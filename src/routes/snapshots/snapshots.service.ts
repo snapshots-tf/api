@@ -9,8 +9,18 @@ import { ListingDocument } from 'src/lib/schemas/listing.schema';
 import { returnListings } from 'src/lib/helpers';
 import { getImageFromSKU, ItemImages } from 'src/lib/images';
 
+export interface OverviewCache {
+    time: number;
+    item: string[];
+}
+
 @Injectable()
 export class SnapshotsService {
+    private readonly overviewCache: OverviewCache = {
+        time: Math.round(new Date().getTime() / 1000),
+        item: [],
+    };
+
     constructor(
         @InjectModel('snapshots')
         private readonly snapshotsModel: Model<SnapshotDocument>,
@@ -23,7 +33,17 @@ export class SnapshotsService {
     }
 
     async getOverview(): Promise<string[]> {
-        return this.snapshotsModel.distinct('sku');
+        // Check if time is more than 12 hours old and if so, update the cache
+        if (
+            Math.round(new Date().getTime() / 1000) - this.overviewCache.time >
+                43200 ||
+            this.overviewCache.item.length === 0
+        ) {
+            this.overviewCache.time = Math.round(new Date().getTime() / 1000);
+            this.overviewCache.item = await this.snapshotsModel.distinct('sku');
+        }
+
+        return this.overviewCache.item;
     }
 
     async getHumanReadableOverview(
